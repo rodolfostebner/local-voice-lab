@@ -4,9 +4,10 @@ import wave
 import os
 
 class AudioRecorder:
-    def __init__(self, sample_rate=16000, channels=1):
+    def __init__(self, sample_rate=16000, channels=1, device=None):
         self.sample_rate = sample_rate
         self.channels = channels
+        self.device = device
         self.recording = None
 
     def start_recording(self, duration_seconds):
@@ -16,7 +17,8 @@ class AudioRecorder:
             int(duration_seconds * self.sample_rate),
             samplerate=self.sample_rate,
             channels=self.channels,
-            dtype='int16'
+            dtype='int16',
+            device=self.device
         )
         sd.wait()
         print("Gravacao finalizada.")

@@ -8,7 +8,7 @@ from src.audio.recorder import AudioRecorder
 
 def test_mic_capture():
     print("--- Teste de Captura de Audio ---")
-    recorder = AudioRecorder()
+    recorder = AudioRecorder(device=2)
     
     output_file = "output/test_recording.wav"
     
