@@ -1,0 +1,13 @@
+name: "Incremental Voice Development Pipeline"
+description: "Fluxo de desenvolvimento linear orientado por milestones com governança estrita."
+
+steps:
+  - step-01-refino-milestone.md
+  - step-02-projeto-tecnico.md
+  - step-03-implementacao-especialista.md
+  - step-04-revisao-governanca.md
+  - step-05-validacao-usuario.md
+
+checkpoints:
+  - checkpoint-validacao-direcao.md
+  - step-05-validacao-usuario.md

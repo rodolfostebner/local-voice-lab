@@ -1,0 +1,21 @@
+name: "Local Voice Assistant Lab"
+description: "Desenvolvimento incremental de um assistente de voz local modular com governança rígida."
+icon: "🎙️"
+code: "local-voice-lab"
+
+skills:
+  - web_search
+  - web_fetch
+  - code-execution
+  - file-io
+  - opensquad-skill-creator
+
+data:
+  - pipeline/data/research-brief.md
+  - pipeline/data/domain-framework.md
+  - pipeline/data/quality-criteria.md
+  - pipeline/data/output-examples.md
+  - pipeline/data/anti-patterns.md
+
+pipeline: ./pipeline/pipeline.yaml
+party: ./squad-party.csv

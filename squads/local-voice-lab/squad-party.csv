@@ -1,0 +1,5 @@
+id,name,title,icon,path
+eduardo-executivo,Eduardo Executivo,Executive Lead,🧠,./agents/eduardo-executivo.agent.md
+mateus-modelos,Mateus Modelos,Especialista LLM,🤖,./agents/mateus-modelos.agent.md
+vitor-voz,Vitor Voz,Especialista Voz,🎙️,./agents/vitor-voz.agent.md
+rebeca-revisao,Rebeca Revisao,Revisora Governança,⚖️,./agents/rebeca-revisao.agent.md
