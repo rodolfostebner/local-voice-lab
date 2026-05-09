@@ -4,10 +4,12 @@ description: "Fluxo de desenvolvimento linear orientado por milestones com gover
 steps:
   - step-01-refino-milestone.md
   - step-02-projeto-tecnico.md
-  - step-03-implementacao-especialista.md
-  - step-04-revisao-governanca.md
-  - step-05-validacao-usuario.md
+  - checkpoint-validacao-direcao.md
+  - step-03-execucao-llm.md
+  - step-04-execucao-voz.md
+  - step-05-revisao-governanca.md
+  - step-06-validacao-usuario.md
 
 checkpoints:
   - checkpoint-validacao-direcao.md
-  - step-05-validacao-usuario.md
+  - step-06-validacao-usuario.md

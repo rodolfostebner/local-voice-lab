@@ -10,3 +10,7 @@ _build/
 *.mp3
 *.onnx
 *.bin
+
+squads/local-voice-lab/output/
+squads/local-voice-lab/state.json
+.vscode/
