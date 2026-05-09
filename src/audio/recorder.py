@@ -4,7 +4,7 @@ import wave
 import os
 
 class AudioRecorder:
-    def __init__(self, sample_rate=16000, channels=1, device=None):
+    def __init__(self, sample_rate=16000, channels=1, device=2):
         self.sample_rate = sample_rate
         self.channels = channels
         self.device = device
