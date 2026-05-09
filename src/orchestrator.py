@@ -1,8 +1,9 @@
 from src.stt.whisper_engine import WhisperEngine
 from src.llm.ollama_client import OllamaClient
+from src.tts.tts_engine import PiperTTSEngine
 
 class VoiceOrchestrator:
-    def __init__(self, stt_model="base", llm_model="qwen2.5:0.5b"):
+    def __init__(self, stt_model="base", llm_model="qwen2.5:0.5b", tts_model="pt_BR-faber-medium"):
         """
         Coordenador central do fluxo de voz.
         Mantem-se simples para evitar tornar-se um 'God Object'.
@@ -11,10 +12,11 @@ class VoiceOrchestrator:
         print("Inicializando VoiceOrchestrator...")
         self.stt = WhisperEngine(model_size=stt_model)
         self.llm = OllamaClient(model=llm_model)
+        self.tts = PiperTTSEngine(model_name=tts_model)
 
-    def process_audio(self, audio_file_path):
+    def process_audio(self, audio_file_path, output_audio_path="output/response.wav"):
         """
-        Executa o fluxo completo: Audio -> STT -> Texto -> LLM -> Resposta.
+        Executa o fluxo completo: Audio -> STT -> Texto -> LLM -> Resposta -> TTS -> Reproducao.
         Retorna o texto transcrito, a resposta do LLM e os tempos de processamento.
         """
         print("\n[Orchestrator] Iniciando processamento de audio...")
@@ -26,12 +28,19 @@ class VoiceOrchestrator:
         # Se a transcricao for vazia ou falhar, aborta o fluxo de forma segura
         if not transcribed_text:
             print("[Orchestrator] Transcricao vazia. Abortando fluxo LLM.")
-            return transcribed_text, "", stt_time, 0.0
+            return transcribed_text, "", stt_time, 0.0, 0.0
 
         # 2. LLM (Inferencia)
         print("[Orchestrator] Enviando texto para o LLM...")
         llm_response, llm_time = self.llm.generate_response(transcribed_text)
         
+        # 3. TTS (Text-to-Speech)
+        print("[Orchestrator] Gerando audio de resposta (TTS)...")
+        tts_time = self.tts.generate_audio(llm_response, output_audio_path)
+        
+        print(f"[Orchestrator] Reproduzindo audio ({output_audio_path})...")
+        self.tts.play_audio(output_audio_path)
+        
         print("[Orchestrator] Fluxo concluido com sucesso.")
         
-        return transcribed_text, llm_response, stt_time, llm_time
+        return transcribed_text, llm_response, stt_time, llm_time, tts_time, info
