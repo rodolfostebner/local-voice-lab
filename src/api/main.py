@@ -11,7 +11,8 @@ import json
 import time
 import asyncio
 import threading
-from typing import List
+import re
+from typing import List, Optional, Any
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -106,6 +107,13 @@ AVAILABLE_VOICES = {
     },
 }
 
+MODE_MODEL_MAP = {
+    "fast": "qwen2.5:0.5b",
+    "standard": "llama3.2:1b",
+    "premium": "gemma3:4b",
+}
+
+
 
 # ─── Inference Queue & Worker ────────────────────────────────
 request_queue = asyncio.Queue()
@@ -117,22 +125,26 @@ async def inference_worker():
     while True:
         task = await request_queue.get()
         func, args, kwargs = task
+        client_id = kwargs.get("client_id")
+        session = manager.get_session(client_id)
         try:
             # Executa a pipeline (bloqueante, em thread para não travar o loop)
             # Mas a fila garante que apenas UM por vez seja processado
             await asyncio.to_thread(func, *args, **kwargs)
         except Exception as e:
             print(f"[Queue] Erro ao processar task: {e}")
-            state_machine.emit_event("error", {"message": str(e)})
+            if session:
+                session.state_machine.emit_event("error", {"message": str(e)})
         finally:
             # Garante que o estado sempre volta para IDLE após processamento
-            state_machine.reset()
+            if session:
+                session.state_machine.reset()
             request_queue.task_done()
 
 # ─── Lifespan ─────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app):
-    on_state_event._loop = asyncio.get_event_loop()
+    lifespan._loop = asyncio.get_event_loop()
     # Inicia o worker de inferência
     worker_task = asyncio.create_task(inference_worker())
     yield
@@ -149,72 +161,74 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/static", StaticFiles(directory="web"), name="static")
+app.mount("/sessions", StaticFiles(directory="output/sessions"), name="sessions")
 
-# ─── Global State ────────────────────────────────────────────
-state_machine = ConversationStateMachine()
-connected_clients: List[WebSocket] = []
 
-# Pipeline components (lazy init)
+# ─── Multi-Client Session Management ──────────────────────────
+class ClientSession:
+    """Encapsula o estado completo de um cliente conectado."""
+    def __init__(self, client_id: str, websocket: WebSocket):
+        self.client_id = client_id
+        self.websocket = websocket
+        self.state_machine = ConversationStateMachine()
+        self.config = {
+            "llm_model": "gemma3:4b",
+            "tts_voice": "pt_BR-faber-medium",
+            "stt_model": "base",
+            "mode": "premium",
+            "voice_enabled": True,
+        }
+        # Registra listener para este cliente específico
+        self.state_machine.add_listener(self._on_state_event)
+
+    def _on_state_event(self, event):
+        """Envia eventos da State Machine apenas para este cliente via WebSocket."""
+        loop = getattr(lifespan, "_loop", None)
+        if loop and loop.is_running():
+            asyncio.run_coroutine_threadsafe(self.websocket.send_json(event.to_dict()), loop)
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_sessions: dict[str, ClientSession] = {}
+
+    def connect(self, client_id: str, websocket: WebSocket) -> ClientSession:
+        session = ClientSession(client_id, websocket)
+        self.active_sessions[client_id] = session
+        return session
+
+    def disconnect(self, client_id: str):
+        if client_id in self.active_sessions:
+            del self.active_sessions[client_id]
+
+    def get_session(self, client_id: str) -> Optional[ClientSession]:
+        return self.active_sessions.get(client_id)
+
+manager = ConnectionManager()
+
+
+# ─── Global Resources (Shared) ───────────────────────────────
 stt_engine = None
 llm_client = None
 tts_engines: dict[str, PiperTTSEngine] = {}
 
-# Config
-current_config = {
-    "llm_model": "gemma3:4b",
-    "tts_voice": "pt_BR-faber-medium",
-    "stt_model": "base",
-    "mode": "premium",
-    "voice_enabled": True,
-}
-
-MODE_MODEL_MAP = {
-    "fast": "qwen2.5:0.5b",
-    "standard": "llama3.2:1b",
-    "premium": "gemma3:4b",
-}
-
-
-def get_stt():
+def get_stt(model_name="base"):
     global stt_engine
-    if stt_engine is None:
-        stt_engine = WhisperEngine(model_size=current_config["stt_model"])
+    # Se mudar o modelo, reinicializamos o engine (ou inicializa o primeiro)
+    if stt_engine is None or getattr(stt_engine, "model_size", None) != model_name:
+        stt_engine = WhisperEngine(model_size=model_name)
     return stt_engine
 
-
-def get_llm():
+def get_llm(model_name):
     global llm_client
-    if llm_client is None or llm_client.model != current_config["llm_model"]:
-        llm_client = OllamaClient(model=current_config["llm_model"])
+    if llm_client is None or llm_client.model != model_name:
+        llm_client = OllamaClient(model=model_name)
     return llm_client
 
-
-def get_tts(voice_name: str = None):
-    voice = voice_name or current_config["tts_voice"]
-    if voice not in tts_engines:
-        tts_engines[voice] = PiperTTSEngine(model_name=voice)
-    return tts_engines[voice]
-
-
-# ─── WebSocket Event Broadcasting ────────────────────────────
-async def broadcast_event(event: dict):
-    dead = []
-    for ws in connected_clients:
-        try:
-            await ws.send_json(event)
-        except Exception:
-            dead.append(ws)
-    for ws in dead:
-        connected_clients.remove(ws)
-
-
-def on_state_event(event: StateEvent):
-    loop = getattr(on_state_event, '_loop', None)
-    if loop and loop.is_running():
-        asyncio.run_coroutine_threadsafe(broadcast_event(event.to_dict()), loop)
-
-
-state_machine.add_listener(on_state_event)
+def get_tts(voice_name):
+    if voice_name not in tts_engines:
+        tts_engines[voice_name] = PiperTTSEngine(model_name=voice_name)
+    return tts_engines[voice_name]
 
 
 # ─── Static Files ────────────────────────────────────────────
@@ -232,7 +246,8 @@ app.mount("/static", StaticFiles(directory=web_dir), name="static")
 # ─── REST Endpoints ──────────────────────────────────────────
 @app.get("/api/status")
 async def get_status():
-    return {"state": state_machine.state.value, "config": current_config}
+    """Status global simplificado."""
+    return {"status": "operational", "active_clients": len(manager.active_sessions)}
 
 
 @app.get("/api/models")
@@ -244,21 +259,7 @@ async def get_models():
     }
 
 
-@app.post("/api/config")
-async def update_config(config: dict):
-    global llm_client
-    if "mode" in config:
-        current_config["mode"] = config["mode"]
-        current_config["llm_model"] = MODE_MODEL_MAP.get(config["mode"], current_config["llm_model"])
-        llm_client = None
-    if "llm_model" in config:
-        current_config["llm_model"] = config["llm_model"]
-        llm_client = None
-    if "tts_voice" in config and config["tts_voice"] in AVAILABLE_VOICES:
-        current_config["tts_voice"] = config["tts_voice"]
-    if "voice_enabled" in config:
-        current_config["voice_enabled"] = bool(config["voice_enabled"])
-    return {"status": "ok", "config": current_config}
+# REMOVED: update_config REST endpoint (now handled via WebSocket per-client)
 
 
 @app.get("/api/sessions")
@@ -278,18 +279,19 @@ async def get_sessions():
     return {"sessions": sessions}
 
 
-# ─── WebSocket ────────────────────────────────────────────────
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
+    import uuid
     await ws.accept()
-    connected_clients.append(ws)
-    print(f"[WS] Cliente conectado. Total: {len(connected_clients)}")
+    client_id = str(uuid.uuid4())
+    session = manager.connect(client_id, ws)
+    print(f"[WS] Cliente conectado ({client_id}). Total: {len(manager.active_sessions)}")
 
     await ws.send_json({
         "event": "connected",
         "data": {
-            "state": state_machine.state.value,
-            "config": current_config,
+            "state": session.state_machine.state.value,
+            "config": session.config,
             "voices": {k: v for k, v in AVAILABLE_VOICES.items()},
         },
         "timestamp": time.time(),
@@ -301,74 +303,78 @@ async def websocket_endpoint(ws: WebSocket):
             action = msg.get("action")
 
             if action == "start_listening":
-                if state_machine.transition_to(ConversationState.LISTENING):
+                if session.state_machine.transition_to(ConversationState.LISTENING):
                     await ws.send_json({"event": "ack", "data": {"action": "start_listening"}, "timestamp": time.time()})
 
             elif action == "audio_data":
                 audio_b64 = msg.get("audio")
-                if audio_b64 and state_machine.state == ConversationState.LISTENING:
-                    state_machine.transition_to(ConversationState.TRANSCRIBING)
-                    threading.Thread(target=process_voice_pipeline, args=(audio_b64,), daemon=True).start()
+                if audio_b64 and session.state_machine.state == ConversationState.LISTENING:
+                    session.state_machine.transition_to(ConversationState.TRANSCRIBING)
+                    threading.Thread(target=process_voice_pipeline, args=(audio_b64, client_id), daemon=True).start()
 
             elif action == "text_message":
                 text = msg.get("text", "").strip()
-                if text and state_machine.state == ConversationState.IDLE:
-                    state_machine.transition_to(ConversationState.LISTENING)
-                    state_machine.transition_to(ConversationState.TRANSCRIBING)
-                    state_machine.emit_event("transcription_complete", {"text": text, "language": "text", "stt_time": 0})
-                    threading.Thread(target=process_text_pipeline, args=(text,), daemon=True).start()
+                if text and session.state_machine.state == ConversationState.IDLE:
+                    session.state_machine.transition_to(ConversationState.LISTENING)
+                    session.state_machine.transition_to(ConversationState.TRANSCRIBING)
+                    session.state_machine.emit_event("transcription_complete", {"text": text, "language": "text", "stt_time": 0})
+                    threading.Thread(target=process_text_pipeline, args=(text, client_id), daemon=True).start()
 
             elif action == "config":
                 if "mode" in msg:
-                    current_config["mode"] = msg["mode"]
-                    current_config["llm_model"] = MODE_MODEL_MAP.get(msg["mode"], current_config["llm_model"])
-                    global llm_client
-                    llm_client = None
+                    session.config["mode"] = msg["mode"]
+                    session.config["llm_model"] = MODE_MODEL_MAP.get(msg["mode"], session.config["llm_model"])
                 if "tts_voice" in msg:
-                    current_config["tts_voice"] = msg["tts_voice"]
+                    session.config["tts_voice"] = msg["tts_voice"]
                 if "voice_enabled" in msg:
-                    current_config["voice_enabled"] = bool(msg["voice_enabled"])
+                    session.config["voice_enabled"] = bool(msg["voice_enabled"])
 
             elif action == "cancel":
-                state_machine.reset()
+                session.state_machine.reset()
                 
             elif action == "clear_chat":
-                # Reseta o estado mas mantém o SessionManager pronto para nova interação
-                state_machine.reset()
+                session.state_machine.reset()
                 await ws.send_json({"event": "chat_cleared", "timestamp": time.time()})
 
     except WebSocketDisconnect:
         pass
+    except Exception as e:
+        print(f"[WS] Conexão encerrada inesperadamente: {e}")
     finally:
-        if ws in connected_clients:
-            connected_clients.remove(ws)
-        print(f"[WS] Cliente desconectado. Total: {len(connected_clients)}")
+        manager.disconnect(client_id)
+        print(f"[WS] Cliente desconectado ({client_id}). Total: {len(manager.active_sessions)}")
 
 
 # ─── Pipeline: Text Input (skip STT) ─────────────────────────
-def process_text_pipeline(user_text: str):
+def process_text_pipeline(user_text: str, client_id: str):
     """Pipeline para input de texto — skip STT, vai direto ao LLM."""
-    session = SessionManager()
+    session_obj = manager.get_session(client_id)
+    if not session_obj: return
+
+    session_data = SessionManager()
     
     # Se já houver alguém na fila, avisamos o usuário
     if request_queue.qsize() > 0:
-        state_machine.transition_to(ConversationState.QUEUED, {"queue_pos": request_queue.qsize()})
+        session_obj.state_machine.transition_to(ConversationState.QUEUED, {"queue_pos": request_queue.qsize()})
 
     # Adiciona à fila de inferência
     asyncio.run_coroutine_threadsafe(
-        request_queue.put((_run_llm_tts_pipeline, (session, user_text, 0, None), {})),
-        on_state_event._loop
+        request_queue.put((_run_llm_tts_pipeline, (session_data, user_text, 0, None), {"client_id": client_id})),
+        lifespan._loop
     )
 
 
 # ─── Pipeline: Voice Input ────────────────────────────────────
-def process_voice_pipeline(audio_b64: str):
+def process_voice_pipeline(audio_b64: str, client_id: str):
     """Pipeline completo: Audio → STT → LLM → TTS."""
     import base64
     import subprocess
 
-    session = SessionManager()
-    input_path = session.get_path("mic_input")
+    session_obj = manager.get_session(client_id)
+    if not session_obj: return
+
+    session_data = SessionManager()
+    input_path = session_data.get_path("mic_input")
 
     try:
         audio_bytes = base64.b64decode(audio_b64)
@@ -381,26 +387,25 @@ def process_voice_pipeline(audio_b64: str):
             capture_output=True, timeout=15,
         )
         if result.returncode != 0:
-            state_machine.emit_event("error", {"message": f"Falha na conversão de audio: {result.stderr.decode()[:200]}"})
-            state_machine.reset()
+            session_obj.state_machine.emit_event("error", {"message": f"Falha na conversão de audio: {result.stderr.decode()[:200]}"})
+            session_obj.state_machine.reset()
             return
 
-        # Cleanup temp webm (M8.2 Hardening)
+        # Cleanup temp webm
         try:
             if os.path.exists(webm_path):
                 os.remove(webm_path)
-        except Exception as e:
-            print(f"[Cleanup] Erro ao remover webm: {e}")
+        except Exception: pass
 
-        stt = get_stt()
+        stt = get_stt(session_obj.config["stt_model"])
         transcribed_text, stt_time, stt_info = stt.transcribe(input_path)
 
         if not transcribed_text.strip():
-            state_machine.emit_event("error", {"message": "Nenhum texto detectado no audio."})
-            state_machine.reset()
+            session_obj.state_machine.emit_event("error", {"message": "Nenhum texto detectado no audio."})
+            session_obj.state_machine.reset()
             return
 
-        state_machine.emit_event("transcription_complete", {
+        session_obj.state_machine.emit_event("transcription_complete", {
             "text": transcribed_text,
             "language": getattr(stt_info, "language", "unknown"),
             "stt_time": round(stt_time, 3),
@@ -408,26 +413,30 @@ def process_voice_pipeline(audio_b64: str):
 
         # Se já houver alguém na fila, avisamos o usuário
         if request_queue.qsize() > 0:
-            state_machine.transition_to(ConversationState.QUEUED, {"queue_pos": request_queue.qsize()})
+            session_obj.state_machine.transition_to(ConversationState.QUEUED, {"queue_pos": request_queue.qsize()})
 
         # Adiciona à fila de inferência
         asyncio.run_coroutine_threadsafe(
-            request_queue.put((_run_llm_tts_pipeline, (session, transcribed_text, stt_time, stt_info), {})),
-            on_state_event._loop
+            request_queue.put((_run_llm_tts_pipeline, (session_data, transcribed_text, stt_time, stt_info), {"client_id": client_id})),
+            lifespan._loop
         )
 
     except Exception as e:
-        state_machine.emit_event("error", {"message": str(e)})
+        session_obj.state_machine.emit_event("error", {"message": str(e)})
         print(f"[Pipeline] ERRO: {e}")
 
 
 # ─── Shared LLM → TTS Pipeline ───────────────────────────────
-def _run_llm_tts_pipeline(session, user_text: str, stt_time: float, stt_info):
+def _run_llm_tts_pipeline(session_data, user_text: str, stt_time: float, stt_info, **kwargs):
     """Core pipeline compartilhado entre voice e text input."""
-    state_machine.transition_to(ConversationState.THINKING)
+    client_id = kwargs.get("client_id")
+    session_obj = manager.get_session(client_id)
+    if not session_obj: return
 
-    llm = get_llm()
-    tts = get_tts()
+    session_obj.state_machine.transition_to(ConversationState.THINKING)
+
+    llm = get_llm(session_obj.config["llm_model"])
+    tts = get_tts(session_obj.config["tts_voice"])
 
     full_response = ""
     ttft = None
@@ -436,7 +445,7 @@ def _run_llm_tts_pipeline(session, user_text: str, stt_time: float, stt_info):
     chunk_count = 0
     llm_start = time.time()
 
-    tts_dir = os.path.join(session.session_dir, "tts", "chunks")
+    tts_dir = os.path.join(session_data.session_dir, "tts", "chunks")
     os.makedirs(tts_dir, exist_ok=True)
 
     # Buffer for natural chunking — accumulate raw text, detect sentences
@@ -448,13 +457,13 @@ def _run_llm_tts_pipeline(session, user_text: str, stt_time: float, stt_info):
     for token in llm.generate_stream(user_text, system_prompt=SYSTEM_PROMPT):
         if ttft is None:
             ttft = time.time() - llm_start
-            state_machine.emit_event("metrics_updated", {"ttft": round(ttft, 3)})
+            session_obj.state_machine.emit_event("metrics_updated", {"ttft": round(ttft, 3)})
 
         full_response += token
         raw_buffer += token
 
         # Emit partial text (original, com markdown se houver)
-        state_machine.emit_event("llm_chunk", {"token": token, "full_text": full_response})
+        session_obj.state_machine.emit_event("llm_chunk", {"token": token, "full_text": full_response})
 
         # Detect sentence boundary in buffer
         if _sentence_end.search(raw_buffer) and len(raw_buffer.strip()) >= MIN_CHUNK_CHARS:
@@ -462,9 +471,9 @@ def _run_llm_tts_pipeline(session, user_text: str, stt_time: float, stt_info):
             clean_chunk = sanitize_for_tts(raw_buffer).strip()
             raw_buffer = ""
 
-            if clean_chunk and current_config["voice_enabled"]:
-                if not state_machine.state == ConversationState.SPEAKING:
-                    state_machine.transition_to(ConversationState.SPEAKING)
+            if clean_chunk and session_obj.config["voice_enabled"]:
+                if not session_obj.state_machine.state == ConversationState.SPEAKING:
+                    session_obj.state_machine.transition_to(ConversationState.SPEAKING)
 
                 chunk_count += 1
                 chunk_path = os.path.join(tts_dir, f"chunk_{chunk_count:03d}.wav")
@@ -474,23 +483,35 @@ def _run_llm_tts_pipeline(session, user_text: str, stt_time: float, stt_info):
 
                 if ttfs is None:
                     ttfs = time.time() - llm_start
-                    state_machine.emit_event("metrics_updated", {"ttfs": round(ttfs, 3)})
+                    session_obj.state_machine.emit_event("metrics_updated", {"ttfs": round(ttfs, 3)})
 
-                state_machine.emit_event("tts_chunk_ready", {"chunk_id": chunk_count, "text": clean_chunk, "gen_time": round(tts_gen_time, 3)})
-                tts.play_audio(chunk_path)
-                state_machine.emit_event("playback_finished", {"chunk_id": chunk_count})
+                session_obj.state_machine.emit_event("tts_chunk_ready", {
+                    "chunk_id": chunk_count, 
+                    "text": clean_chunk, 
+                    "gen_time": round(tts_gen_time, 3),
+                    "audio_url": f"/sessions/{session_data.timestamp}/tts/chunks/chunk_{chunk_count:03d}.wav"
+                })
+                # REMOVED: tts.play_audio(chunk_path)
+                # state_machine.emit_event("playback_finished", {"chunk_id": chunk_count})
 
                 chunks_meta.append({"id": chunk_count, "text": clean_chunk, "path": chunk_path, "gen_time": round(tts_gen_time, 3)})
 
     # Flush remaining buffer
     remaining = sanitize_for_tts(raw_buffer).strip()
-    if remaining and current_config["voice_enabled"]:
-        if not state_machine.state == ConversationState.SPEAKING:
-            state_machine.transition_to(ConversationState.SPEAKING)
+    if remaining and session_obj.config["voice_enabled"]:
+        if not session_obj.state_machine.state == ConversationState.SPEAKING:
+            session_obj.state_machine.transition_to(ConversationState.SPEAKING)
         chunk_count += 1
         chunk_path = os.path.join(tts_dir, f"chunk_{chunk_count:03d}.wav")
         tts.generate_audio(remaining, chunk_path)
-        tts.play_audio(chunk_path)
+        
+        session_obj.state_machine.emit_event("tts_chunk_ready", {
+            "chunk_id": chunk_count, 
+            "text": remaining, 
+            "gen_time": 0,
+            "audio_url": f"/sessions/{session_data.timestamp}/tts/chunks/chunk_{chunk_count:03d}.wav"
+        })
+        # REMOVED: tts.play_audio(chunk_path)
         chunks_meta.append({"id": chunk_count, "text": remaining, "path": chunk_path, "gen_time": 0})
 
     # Metrics calculation
@@ -500,21 +521,21 @@ def _run_llm_tts_pipeline(session, user_text: str, stt_time: float, stt_info):
     # Persist
 
     # If voice was disabled, still transition through states
-    if not current_config["voice_enabled"] and state_machine.state == ConversationState.THINKING:
-        state_machine.transition_to(ConversationState.SPEAKING)
+    if not session_obj.config["voice_enabled"] and session_obj.state_machine.state == ConversationState.THINKING:
+        session_obj.state_machine.transition_to(ConversationState.IDLE)
 
     # Persist
-    session.save_text("stt_transcription", user_text)
-    session.save_text("llm_prompt", user_text)
-    session.save_text("llm_response", full_response)
+    session_data.save_text("stt_transcription", user_text)
+    session_data.save_text("llm_prompt", user_text)
+    session_data.save_text("llm_response", full_response)
 
     lang = getattr(stt_info, "language", "text") if stt_info else "text"
     prob = getattr(stt_info, "language_probability", 0.0) if stt_info else 0.0
 
-    session.build_metadata(
-        stt_model=current_config["stt_model"],
-        llm_model=current_config["llm_model"],
-        tts_model=current_config["tts_voice"],
+    session_data.build_metadata(
+        stt_model=session_obj.config["stt_model"],
+        llm_model=session_obj.config["llm_model"],
+        tts_model=session_obj.config["tts_voice"],
         stt_time=stt_time,
         llm_time=total_llm_time,
         tts_time=0,
@@ -528,16 +549,16 @@ def _run_llm_tts_pipeline(session, user_text: str, stt_time: float, stt_info):
         chunks=chunks_meta,
     )
 
-    state_machine.emit_event("pipeline_complete", {
-        "session_id": session.timestamp,
+    session_obj.state_machine.emit_event("pipeline_complete", {
+        "session_id": session_data.timestamp,
         "transcription": user_text,
         "response": full_response,
         "ttft": round(ttft, 3) if ttft else None,
         "ttfs": round(ttfs, 3) if ttfs else None,
         "total_time": round(total_llm_time, 3),
         "chunks_count": chunk_count,
-        "model": current_config["llm_model"],
-        "voice_enabled": current_config["voice_enabled"],
+        "model": session_obj.config["llm_model"],
+        "voice_enabled": session_obj.config["voice_enabled"],
     })
 
 

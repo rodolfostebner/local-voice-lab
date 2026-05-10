@@ -35,16 +35,18 @@ VALID_TRANSITIONS = {
 
 class StateEvent:
     """Evento estruturado emitido a cada transicao de estado."""
-    def __init__(self, event_type: str, data: dict = None):
+    def __init__(self, event_type: str, data: dict = None, client_id: str = None):
         self.event_type = event_type
         self.data = data or {}
         self.timestamp = time.time()
+        self.client_id = client_id
 
     def to_dict(self):
         return {
             "event": self.event_type,
             "data": self.data,
             "timestamp": self.timestamp,
+            "client_id": self.client_id,
         }
 
 
@@ -77,7 +79,7 @@ class ConversationStateMachine:
             except Exception as e:
                 print(f"[StateMachine] Erro em listener: {e}")
 
-    def transition_to(self, new_state: ConversationState, context: dict = None) -> bool:
+    def transition_to(self, new_state: ConversationState, context: dict = None, client_id: str = None) -> bool:
         """
         Tenta transicionar para um novo estado.
         Retorna True se a transicao foi valida, False caso contrario.
@@ -96,12 +98,12 @@ class ConversationStateMachine:
                 "from": old_state.value,
                 "to": new_state.value,
                 **(context or {}),
-            }))
+            }, client_id=client_id))
             return True
 
-    def emit_event(self, event_type: str, data: dict = None):
+    def emit_event(self, event_type: str, data: dict = None, client_id: str = None):
         """Emite um evento arbitrario (metricas, chunks, erros) sem mudar estado."""
-        self._emit(StateEvent(event_type, data))
+        self._emit(StateEvent(event_type, data, client_id=client_id))
 
     def reset(self):
         """Forca retorno ao IDLE (uso em erro/recovery)."""

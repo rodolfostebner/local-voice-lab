@@ -14,6 +14,11 @@ let reconnectTimer = null;
 let streamingMsgEl = null;
 let voiceEnabled = true;
 
+// Audio Queue State
+let audioQueue = [];
+let isAudioPlaying = false;
+let currentAudio = null;
+
 const MODE_MODEL_MAP = {
     fast: 'qwen2.5:0.5b',
     standard: 'llama3.2:1b',
@@ -121,7 +126,8 @@ function handleEvent(msg) {
     switch (event) {
         case 'connected':
             updateState(data.state);
-            if (data.config) {
+            // Apenas atualiza a UI se não houver preferências salvas sendo sincronizadas
+            if (data.config && !localStorage.getItem('voicelab_prefs')) {
                 modelLabel.textContent = data.config.llm_model || 'gemma3:4b';
             }
             break;
@@ -142,9 +148,14 @@ function handleEvent(msg) {
             break;
 
         case 'tts_chunk_ready':
+            console.log('[Audio] Chunk recebido:', data.audio_url);
+            if (voiceEnabled && data.audio_url) {
+                addToAudioQueue(data.audio_url);
+            }
             break;
 
         case 'playback_finished':
+            // Opcional: agora o frontend controla isso localmente
             break;
 
         case 'metrics_updated':
@@ -162,6 +173,7 @@ function handleEvent(msg) {
             messagesEl.innerHTML = '';
             addSystemMessage('Conversa limpa');
             resetMetrics();
+            stopAudioPlayback();
             break;
 
         case 'error':
@@ -202,7 +214,60 @@ function updateState(newState) {
         stopIcon.style.display = 'none';
         pttBtn.classList.remove('recording');
         textInput.focus();
+        // REMOVIDO: stopAudioPlayback() daqui para não matar a fila gerada assíncronamente.
     }
+}
+
+
+// ─── Audio Playback Queue ────────────────────────────────────
+function addToAudioQueue(url) {
+    audioQueue.push(url);
+    if (!isAudioPlaying) {
+        playNextInQueue();
+    }
+}
+
+function playNextInQueue() {
+    if (audioQueue.length === 0) {
+        console.log('[Audio] Fila vazia.');
+        isAudioPlaying = false;
+        currentAudio = null;
+        return;
+    }
+
+    isAudioPlaying = true;
+    const url = audioQueue.shift();
+    console.log('[Audio] Reproduzindo:', url);
+    
+    // Resolve URL relativa se necessário (garante absoluto para mobile)
+    const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
+    currentAudio = new Audio(absoluteUrl);
+    
+    currentAudio.onended = () => {
+        console.log('[Audio] Chunk finalizado.');
+        playNextInQueue();
+    };
+
+    currentAudio.onerror = (err) => {
+        console.error("[Audio] Erro no carregamento:", url, err);
+        playNextInQueue();
+    };
+
+    currentAudio.play().catch(err => {
+        console.warn("[Audio] Falha no play (User interaction required?):", err);
+        // Não pula a fila imediatamente para dar chance de retomar com clique se for bloqueio de autoplay
+        isAudioPlaying = false; 
+    });
+}
+
+function stopAudioPlayback() {
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.src = "";
+        currentAudio = null;
+    }
+    audioQueue = [];
+    isAudioPlaying = false;
 }
 
 
@@ -335,15 +400,14 @@ function syncConfig() {
     const model = MODE_MODEL_MAP[mode];
     modelLabel.textContent = model;
 
-    fetch('/api/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            action: 'config',
             mode: mode,
             tts_voice: voiceSelect.value,
             voice_enabled: voiceEnabled,
-        }),
-    });
+        }));
+    }
 }
 
 
@@ -353,6 +417,7 @@ function syncConfig() {
 textInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
+        stopAudioPlayback(); // Interrompe fala atual se o usuário mandar novo texto
         sendTextMessage();
     }
 });
@@ -362,7 +427,10 @@ sendBtn.addEventListener('click', sendTextMessage);
 // PTT
 pttBtn.addEventListener('pointerdown', (e) => {
     e.preventDefault();
-    if (currentState === 'idle') startRecording();
+    if (currentState === 'idle') {
+        stopAudioPlayback(); // Interrompe fala atual se o usuário quiser falar
+        startRecording();
+    }
 });
 
 pttBtn.addEventListener('pointerup', (e) => {
@@ -380,6 +448,7 @@ cancelBtn.addEventListener('click', () => {
         ws.send(JSON.stringify({ action: 'cancel' }));
     }
     finalizeStreaming();
+    stopAudioPlayback();
 });
 
 // Mode selector

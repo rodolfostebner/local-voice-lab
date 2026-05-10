@@ -1,119 +1,91 @@
-# Opensquad
+# 🎙️ Local Voice Assistant Lab
 
-Crie squads de agentes de IA que trabalham juntos — direto do seu IDE.
+Um laboratório experimental focado na construção de um assistente de voz **100% local, offline e auditável**, executando grandes modelos de linguagem (LLMs) e motores de processamento de fala (STT/TTS) sem depender de APIs em nuvem.
 
-## Como Usar
-
-Abra esta pasta no seu IDE e digite:
-
-```
-/opensquad
-```
-
-Isso abre o menu principal. De lá você pode criar squads, executá-los e mais.
-
-Você também pode ser direto — descreva o que quer em linguagem natural:
-
-```
-/opensquad crie um squad para escrever posts no LinkedIn sobre IA
-/opensquad execute o squad meu-squad
-```
-
-## Criar um Squad
-
-Digite `/opensquad` e escolha "Criar squad" no menu, ou seja direto:
-
-```
-/opensquad crie um squad para [o que você precisa]
-```
-
-O Arquiteto fará algumas perguntas, projetará o squad e configurará tudo automaticamente.
-
-## Executar um Squad
-
-Digite `/opensquad` e escolha "Executar squad" no menu, ou seja direto:
-
-```
-/opensquad execute o squad <nome-do-squad>
-```
-
-O squad executa automaticamente, pausando apenas nos checkpoints de decisão.
-
-## Escritório Virtual
-
-O Escritório Virtual é uma interface visual 2D que mostra seus agentes trabalhando em tempo real.
-
-**Passo 1 — Gere o dashboard** (no seu IDE):
-
-```
-/opensquad dashboard
-```
-
-**Passo 2 — Sirva localmente** (no terminal):
-
-```bash
-npx serve squads/<nome-do-squad>/dashboard
-```
-
-**Passo 3 —** Abra `http://localhost:3000` no seu navegador.
+O projeto implementa uma arquitetura multi-cliente isolada, permitindo que diversos dispositivos na rede local (LAN) se conectem e mantenham sessões independentes simultâneas de voz e texto.
 
 ---
 
-# Opensquad (English)
+## 🎯 Características Principais
 
-Create AI squads that work together — right from your IDE.
+*   **Local-First & Offline:** Todos os componentes (Ollama, Faster Whisper, Piper TTS) rodam localmente. Nenhuma voz, áudio ou texto é enviado para a nuvem.
+*   **Acesso Mobile/LAN:** Compatibilidade de rede local completa via TLS (`mkcert`) e streaming WebSockets, suportando microfones de smartphones e tablets.
+*   **Arquitetura ClientSession:** Cada aba do navegador ou celular possui uma máquina de estados (`StateMachine`), fila de áudio e configurações (modelo, voz) **isoladas e independentes**.
+*   **Streaming Incremental (Chunking):** Respostas longas do LLM são fragmentadas em sentenças lógicas e sintetizadas/enviadas sob demanda, reduzindo drasticamente o TTFR (Time to First Response).
+*   **Telemetria Embutida:** A cada interação, a plataforma armazena o histórico do LLM, tempos de inferência e metadados, facilitando auditorias estruturadas.
 
-## How to Use
+---
 
-Open this folder in your IDE and type:
+## 🚀 Como Iniciar
 
-```
-/opensquad
-```
+### 1. Requisitos Prévios
+*   Python 3.10+
+*   [Ollama](https://ollama.com) instalado e em execução (`qwen2.5:0.5b`, `llama3.2:1b`, etc.).
+*   [Piper TTS](https://github.com/rhasspy/piper) executáveis (`piper.exe`).
+*   [mkcert](https://github.com/FiloSottile/mkcert) (Apenas para acesso via rede local / mobile).
 
-This opens the main menu. From there you can create squads, run them, and more.
-
-You can also be direct — describe what you want in plain language:
-
-```
-/opensquad create a squad for writing LinkedIn posts about AI
-/opensquad run my-squad
-```
-
-## Create a Squad
-
-Type `/opensquad` and choose "Create squad" from the menu, or be direct:
-
-```
-/opensquad create a squad for [what you need]
-```
-
-The Architect will ask a few questions, design the squad, and set everything up automatically.
-
-## Run a Squad
-
-Type `/opensquad` and choose "Run squad" from the menu, or be direct:
-
-```
-/opensquad run the <squad-name> squad
-```
-
-The squad runs automatically, pausing only at decision checkpoints.
-
-## Virtual Office
-
-The Virtual Office is a 2D visual interface that shows your agents working in real time.
-
-**Step 1 — Generate the dashboard** (in your IDE):
-
-```
-/opensquad dashboard
-```
-
-**Step 2 — Serve it locally** (in terminal):
-
+### 2. Certificados TLS (Obrigatório para Mobile)
+Para que os navegadores (especialmente iOS/Android) liberem o acesso ao microfone (`getUserMedia`), é necessário servir o backend via HTTPS seguro.
+1. Instale o `mkcert`.
+2. Gere os certificados na raiz do projeto:
 ```bash
-npx serve squads/<squad-name>/dashboard
+mkdir -p models/certs
+mkcert -install
+mkcert -cert-file models/certs/cert.pem -key-file models/certs/key.pem "127.0.0.1" "localhost" "192.168.x.x"
+```
+> Substitua `192.168.x.x` pelo IP local da sua máquina.
+
+### 3. Rodando o Laboratório
+Para iniciar todos os serviços e o servidor ASGI de forma transparente:
+```powershell
+.\scripts\run_lab.ps1
 ```
 
-**Step 3 —** Open `http://localhost:3000` in your browser.
+Acesse no celular ou desktop via: `https://[SEU_IP_AQUI]:8000`
+
+---
+
+## 🧹 Manutenção e Telemetria
+
+O sistema armazena todo o tráfego gerado em `output/sessions/`.
+Para evitar que os áudios lotem o disco, utilize o script de manutenção oficial.
+
+**Limpar sessões antigas:**
+```powershell
+.\scripts\cleanup_sessions.ps1 -DryRun  # Simula a limpeza
+.\scripts\cleanup_sessions.ps1          # Executa de verdade
+```
+*Regras do Cleanup:* Áudios maiores que 7 dias são deletados; textos são preservados por 30 dias; sessões com menos de 2h nunca são tocadas.
+
+---
+
+## 🏗️ Estrutura de Documentação
+Para entender a fundo como a plataforma foi projetada, consulte:
+*   [PRD (Product Requirements Document)](docs/PRD.md) - Escopo original e roadmap de Milestones.
+*   [ARCHITECTURE](docs/ARCHITECTURE.md) - Padrões de engenharia e decisões arquiteturais.
+
+---
+
+## 🧠 Modelos Validados
+
+| Perfil | Modelo |
+|---|---|
+| Fast | qwen2.5:0.5b |
+| Standard | llama3.2:1b |
+| Premium | gemma3:4b |
+
+---
+
+Microfone
+↓
+STT (Whisper)
+↓
+LLM (Ollama)
+↓
+Chunking
+↓
+Piper TTS
+↓
+Streaming WebSocket
+↓
+Playback no Navegador
