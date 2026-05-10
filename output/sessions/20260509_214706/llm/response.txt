@@ -1,0 +1,12 @@
+Peço desculpas pelo erro!
+
+A ordem dos planetas no sistema solar é:
+
+1. Mercúrio
+2. Vênus
+3. Terra
+4. Marte
+5. Júpiter
+6. Saturno
+7. Urano
+8. Netuno

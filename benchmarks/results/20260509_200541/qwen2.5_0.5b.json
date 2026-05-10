@@ -1,0 +1,170 @@
+[
+  {
+    "run": 1,
+    "timestamp": "2026-05-09T20:05:41.523513",
+    "tests": [
+      {
+        "category": "Factualidade Simples",
+        "prompt": "Qual a capital do Japao?",
+        "response": "A capital do Japão é Nara.\n\nAlguns fatos sobre Nara:\n\n1. É o maior centro cultural e turístico da Japão.\n\n2. A cidade tem uma história que remonta ao século IV, quando foi colonizada por Itálio.\n\n3. Nara é conhecida como a \"Cidade do Inverno\" porque se encontra no final de novembro e início de dezembro.\n\n4. O templo de Nara, o Templo de Nara, é um dos maiores edifícios da Japão e tem uma arquitetura única.\n\n5.",
+        "metrics": {
+          "duration_total_s": 5.758,
+          "load_duration_s": 1.637,
+          "tokens_count": 128,
+          "tokens_per_sec": 35.86,
+          "ram_peak_mb": 6810.12,
+          "response_length": 413
+        }
+      },
+      {
+        "category": "Raciocinio Curto",
+        "prompt": "Se eu tenho 3 macas e ganho mais 2, mas como 1, com quantas macas eu fico? Responda apenas o numero.",
+        "response": "Para resolver isso, vamos considerar que cada maca teve 2 ganhos. Então, se você tem 3 macas, a quantidade total de ganhos seria:\n\n3 macas x 2 ganhos por maca = 6 ganhos\n\nSeu novo total de ganhos será então:\n\n6 ganhos + 1 ganho original = 7 ganhos\n\nPortanto, com 3 macas e 1 ganho original, você teria 7 ganhos.",
+        "metrics": {
+          "duration_total_s": 3.414,
+          "load_duration_s": 0.133,
+          "tokens_count": 102,
+          "tokens_per_sec": 36.65,
+          "ram_peak_mb": 6810.12,
+          "response_length": 311
+        }
+      },
+      {
+        "category": "Resumo",
+        "prompt": "Resuma em uma frase: A inteligencia artificial e um campo da ciencia da computacao que se concentra na criacao de maquinas que podem realizar tarefas que normalmente exigem inteligencia humana.",
+        "response": "A inteligência artificial é o conjunto de tecnologias e conceitos que permitem a criação de máquinas que possam executar tarefas complexas, como a linguagem, a percepção e a interação com os humanos, sem necessariamente precisar de um cérebro humano.",
+        "metrics": {
+          "duration_total_s": 2.366,
+          "load_duration_s": 0.132,
+          "tokens_count": 67,
+          "tokens_per_sec": 38.15,
+          "ram_peak_mb": 6822.09,
+          "response_length": 250
+        }
+      },
+      {
+        "category": "Instrucao",
+        "prompt": "Liste 3 cores primarias, uma por linha, sem numeracao.",
+        "response": "1. Intel Core i7-9700K\n2. AMD Ryzen 5 1600\n3. NVIDIA GeForce RTX 3080 Ti",
+        "metrics": {
+          "duration_total_s": 1.371,
+          "load_duration_s": 0.158,
+          "tokens_count": 38,
+          "tokens_per_sec": 39.17,
+          "ram_peak_mb": 6822.09,
+          "response_length": 72
+        }
+      },
+      {
+        "category": "Portugues Natural",
+        "prompt": "Escreva uma saudacao amigavel para um assistente de voz.",
+        "response": "Olá! Boa noite, assistente de voz. Como posso ajudar você hoje?",
+        "metrics": {
+          "duration_total_s": 0.772,
+          "load_duration_s": 0.129,
+          "tokens_count": 22,
+          "tokens_per_sec": 50.49,
+          "ram_peak_mb": 6818.54,
+          "response_length": 63
+        }
+      },
+      {
+        "category": "Resistencia a Alucinacao",
+        "prompt": "Quem foi o presidente do Brasil em 1492?",
+        "response": "O presidente do Brasil em 1492 era Cristóvão Colombo. Ele foi um explorador e navegante que viajou para o Oceano Índico, onde chegaria a ser conhecido como \"Brasil\" ou \"Indio\". Colombo é considerado um dos primeiros europeus a se aventurar na região do Oceano Índico. Ele foi o primeiro a explorar e desvendar as costas do Oceano Índico, incluindo o Brasil, e contribuiu para a descoberta da América do Sul.",
+        "metrics": {
+          "duration_total_s": 3.995,
+          "load_duration_s": 0.13,
+          "tokens_count": 127,
+          "tokens_per_sec": 36.62,
+          "ram_peak_mb": 6803.08,
+          "response_length": 407
+        }
+      }
+    ]
+  },
+  {
+    "run": 2,
+    "timestamp": "2026-05-09T20:06:11.392145",
+    "tests": [
+      {
+        "category": "Factualidade Simples",
+        "prompt": "Qual a capital do Japao?",
+        "response": "A capital do Japão é Nara.\n\nAlguns fatos sobre Nara:\n\n1. É o maior centro cultural e turístico da Japão.\n\n2. A cidade tem uma história que remonta ao século IV, quando foi colonizada por Itálio.\n\n3. Nara é conhecida como a \"Cidade do Inverno\" porque se encontra no final de novembro e início de dezembro.\n\n4. O templo de Nara, o Templo de Nara, é um dos maiores edifícios da Japão e tem uma arquitetura única.\n\n5.",
+        "metrics": {
+          "duration_total_s": 3.785,
+          "load_duration_s": 0.129,
+          "tokens_count": 128,
+          "tokens_per_sec": 38.66,
+          "ram_peak_mb": 6791.75,
+          "response_length": 413
+        }
+      },
+      {
+        "category": "Raciocinio Curto",
+        "prompt": "Se eu tenho 3 macas e ganho mais 2, mas como 1, com quantas macas eu fico? Responda apenas o numero.",
+        "response": "Para resolver isso, vamos considerar que cada maca teve 2 ganhos. Então, se você tem 3 macas, a quantidade total de ganhos seria:\n\n3 macas x 2 ganhos por maca = 6 ganhos\n\nSeu novo total de ganhos será então:\n\n6 ganhos + 1 ganho original = 7 ganhos\n\nPortanto, com 3 macas e 1 ganho original, você teria 7 ganhos.",
+        "metrics": {
+          "duration_total_s": 3.189,
+          "load_duration_s": 0.126,
+          "tokens_count": 102,
+          "tokens_per_sec": 39.55,
+          "ram_peak_mb": 6791.75,
+          "response_length": 311
+        }
+      },
+      {
+        "category": "Resumo",
+        "prompt": "Resuma em uma frase: A inteligencia artificial e um campo da ciencia da computacao que se concentra na criacao de maquinas que podem realizar tarefas que normalmente exigem inteligencia humana.",
+        "response": "A inteligência artificial é o conjunto de tecnologias e conceitos que permitem a criação de máquinas que possam executar tarefas complexas, como a linguagem, a percepção e a interação com os humanos, sem necessariamente precisar de um cérebro humano.",
+        "metrics": {
+          "duration_total_s": 2.336,
+          "load_duration_s": 0.132,
+          "tokens_count": 67,
+          "tokens_per_sec": 39.43,
+          "ram_peak_mb": 6741.77,
+          "response_length": 250
+        }
+      },
+      {
+        "category": "Instrucao",
+        "prompt": "Liste 3 cores primarias, uma por linha, sem numeracao.",
+        "response": "1. Intel Core i7-9700K\n2. AMD Ryzen 5 1600\n3. NVIDIA GeForce RTX 3080 Ti",
+        "metrics": {
+          "duration_total_s": 1.477,
+          "load_duration_s": 0.141,
+          "tokens_count": 38,
+          "tokens_per_sec": 37.5,
+          "ram_peak_mb": 6733.85,
+          "response_length": 72
+        }
+      },
+      {
+        "category": "Portugues Natural",
+        "prompt": "Escreva uma saudacao amigavel para um assistente de voz.",
+        "response": "Olá! Boa noite, assistente de voz. Como posso ajudar você hoje?",
+        "metrics": {
+          "duration_total_s": 0.78,
+          "load_duration_s": 0.13,
+          "tokens_count": 22,
+          "tokens_per_sec": 50.18,
+          "ram_peak_mb": 6734.47,
+          "response_length": 63
+        }
+      },
+      {
+        "category": "Resistencia a Alucinacao",
+        "prompt": "Quem foi o presidente do Brasil em 1492?",
+        "response": "O presidente do Brasil em 1492 era Cristóvão Colombo. Ele foi um explorador e navegante que viajou para o Oceano Índico, onde chegaria a ser conhecido como \"Brasil\" ou \"Indio\". Colombo é considerado um dos primeiros europeus a se aventurar na região do Oceano Índico. Ele foi o primeiro a explorar e desvendar as costas do Oceano Índico, incluindo o Brasil, e contribuiu para a descoberta da América do Sul.",
+        "metrics": {
+          "duration_total_s": 4.126,
+          "load_duration_s": 0.134,
+          "tokens_count": 127,
+          "tokens_per_sec": 35.45,
+          "ram_peak_mb": 6734.47,
+          "response_length": 407
+        }
+      }
+    ]
+  }
+]

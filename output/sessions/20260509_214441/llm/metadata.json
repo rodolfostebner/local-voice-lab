@@ -1,0 +1,46 @@
+{
+  "session_id": "20260509_214441",
+  "timestamp": "2026-05-09T21:44:51.239449",
+  "status": "success",
+  "models": {
+    "stt": "base",
+    "llm": "qwen2.5:0.5b",
+    "tts": "pt_BR-faber-medium"
+  },
+  "timings": {
+    "stt_seconds": 2.792,
+    "llm_seconds": 7.099,
+    "tts_seconds": 0,
+    "total_seconds": 9.891,
+    "ttft_seconds": 4.317,
+    "ttfs_seconds": 4.936
+  },
+  "streaming": {
+    "is_streaming": true,
+    "chunks_count": 1,
+    "chunks_details": [
+      {
+        "id": 1,
+        "text": "A capital do Brasil é Brasília.",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_214441\\tts\\chunks\\chunk_001.wav",
+        "gen_time": 0.349
+      }
+    ]
+  },
+  "detection": {
+    "language": "pt",
+    "confidence": 0.9959350824356079
+  },
+  "content": {
+    "transcription": "Olá, qual é a capital do Brasil?",
+    "llm_response": "A capital do Brasil é Brasília."
+  },
+  "paths": {
+    "mic_input": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_214441\\input\\mic_input.wav",
+    "stt_transcription": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_214441\\input\\stt_transcription.txt",
+    "llm_prompt": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_214441\\llm\\prompt.txt",
+    "llm_response": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_214441\\llm\\response.txt",
+    "tts_response_dir": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_214441\\tts",
+    "pipeline_log": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_214441\\logs\\pipeline.log"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "qwen2.5:0.5b": {
+    "duration_total_s": {
+      "min": 0.751,
+      "max": 11.905,
+      "mean": 3.29,
+      "stdev": 3.175
+    },
+    "tokens_per_sec": {
+      "min": 31.48,
+      "max": 51.05,
+      "mean": 39.756,
+      "stdev": 6.44
+    },
+    "ram_peak_mb": {
+      "min": 6314.77,
+      "max": 6487.64,
+      "mean": 6407.082,
+      "stdev": 75.498
+    }
+  },
+  "qwen2.5:1.5b": {
+    "duration_total_s": {
+      "min": 1.221,
+      "max": 32.207,
+      "mean": 9.177,
+      "stdev": 10.563
+    },
+    "tokens_per_sec": {
+      "min": 11.81,
+      "max": 32.47,
+      "mean": 17.426,
+      "stdev": 5.682
+    },
+    "ram_peak_mb": {
+      "min": 6792.78,
+      "max": 7247.82,
+      "mean": 7106.463,
+      "stdev": 149.918
+    }
+  },
+  "llama3.2:1b": {
+    "duration_total_s": {
+      "min": 0.912,
+      "max": 48.13,
+      "mean": 8.395,
+      "stdev": 14.461
+    },
+    "tokens_per_sec": {
+      "min": 12.89,
+      "max": 26.22,
+      "mean": 16.472,
+      "stdev": 3.33
+    },
+    "ram_peak_mb": {
+      "min": 6430.52,
+      "max": 7021.98,
+      "mean": 6735.345,
+      "stdev": 273.068
+    }
+  },
+  "gemma3:4b": {
+    "duration_total_s": {
+      "min": 3.214,
+      "max": 48.382,
+      "mean": 19.335,
+      "stdev": 17.923
+    },
+    "tokens_per_sec": {
+      "min": 5.76,
+      "max": 13.65,
+      "mean": 6.85,
+      "stdev": 1.966
+    },
+    "ram_peak_mb": {
+      "min": 6847.39,
+      "max": 7543.79,
+      "mean": 7234.069,
+      "stdev": 212.09
+    }
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "session_id": "20260509_215006",
+  "timestamp": "2026-05-09T21:51:05.687328",
+  "status": "success",
+  "models": {
+    "stt": "base",
+    "llm": "llama3.2:1b",
+    "tts": "pt_BR-faber-medium"
+  },
+  "timings": {
+    "stt_seconds": 1.857,
+    "llm_seconds": 57.601,
+    "tts_seconds": 0,
+    "total_seconds": 59.458,
+    "ttft_seconds": 2.51,
+    "ttfs_seconds": 4.191
+  },
+  "streaming": {
+    "is_streaming": true,
+    "chunks_count": 19,
+    "chunks_details": [
+      {
+        "id": 1,
+        "text": "Claro, vou te dar a receita do bolo de chocolate clássico.",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_001.wav",
+        "gen_time": 0.548
+      },
+      {
+        "id": 2,
+        "text": "Ingredientes:",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_002.wav",
+        "gen_time": 0.236
+      },
+      {
+        "id": 3,
+        "text": "- 200g farinha",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_003.wav",
+        "gen_time": 0.188
+      },
+      {
+        "id": 4,
+        "text": "- 100g açúcar",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_004.wav",
+        "gen_time": 0.339
+      },
+      {
+        "id": 5,
+        "text": "- 50g manteiga derretida",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_005.wav",
+        "gen_time": 0.366
+      },
+      {
+        "id": 6,
+        "text": "- 4 ovos",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_006.wav",
+        "gen_time": 0.172
+      },
+      {
+        "id": 7,
+        "text": "- 120ml leite",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_007.wav",
+        "gen_time": 0.475
+      },
+      {
+        "id": 8,
+        "text": "- 1 colher de chá de extrato de baunilha",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_008.wav",
+        "gen_time": 0.586
+      },
+      {
+        "id": 9,
+        "text": "Modo de preparo:",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_009.wav",
+        "gen_time": 0.353
+      },
+      {
+        "id": 10,
+        "text": "1.",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_010.wav",
+        "gen_time": 0.294
+      },
+      {
+        "id": 11,
+        "text": "Pré-aqueça o forno a 180°C.",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_011.wav",
+        "gen_time": 0.494
+      },
+      {
+        "id": 12,
+        "text": "2.",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_012.wav",
+        "gen_time": 0.06
+      },
+      {
+        "id": 13,
+        "text": "Em uma tigela, misture a farinha, o açúcar e a manteiga derretida até obter uma massa homogênea.",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_013.wav",
+        "gen_time": 0.397
+      },
+      {
+        "id": 14,
+        "text": "3.",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_014.wav",
+        "gen_time": 0.064
+      },
+      {
+        "id": 15,
+        "text": "Adicione os ovos, os 4 ovos batidos (de novo), a leite e o extrato de baunilha à massa.",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_015.wav",
+        "gen_time": 0.357
+      },
+      {
+        "id": 16,
+        "text": "4.",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_016.wav",
+        "gen_time": 0.05
+      },
+      {
+        "id": 17,
+        "text": "Leve a mistura a um recipiente untado com manteiga e leve ao forno por cerca de 40 minutos ou até que um palito inserido saia limpo das bordas do bolo.",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_017.wav",
+        "gen_time": 0.553
+      },
+      {
+        "id": 18,
+        "text": "5.",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_018.wav",
+        "gen_time": 0.051
+      },
+      {
+        "id": 19,
+        "text": "Retire-o do forno, esfregue suavemente para remover qualquer resíduo de manteiga e deixe esfriar completamente em uma tigela revestida com papel toalha.",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts\\chunks\\chunk_019.wav",
+        "gen_time": 0.556
+      }
+    ]
+  },
+  "detection": {
+    "language": "pt",
+    "confidence": 0.9902690649032593
+  },
+  "content": {
+    "transcription": "Me diga como fazer uma receita de bolo de chocolate.",
+    "llm_response": "Claro, vou te dar a receita do bolo de chocolate clássico.\n\nIngredientes:\n\n- 200g farinha\n- 100g açúcar\n- 50g manteiga derretida\n- 4 ovos\n- 120ml leite\n- 1 colher de chá de extrato de baunilha\n\nModo de preparo:\n\n1. Pré-aqueça o forno a 180°C.\n2. Em uma tigela, misture a farinha, o açúcar e a manteiga derretida até obter uma massa homogênea.\n3. Adicione os ovos, os 4 ovos batidos (de novo), a leite e o extrato de baunilha à massa.\n4. Leve a mistura a um recipiente untado com manteiga e leve ao forno por cerca de 40 minutos ou até que um palito inserido saia limpo das bordas do bolo.\n5. Retire-o do forno, esfregue suavemente para remover qualquer resíduo de manteiga e deixe esfriar completamente em uma tigela revestida com papel toalha."
+  },
+  "paths": {
+    "mic_input": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\input\\mic_input.wav",
+    "stt_transcription": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\input\\stt_transcription.txt",
+    "llm_prompt": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\llm\\prompt.txt",
+    "llm_response": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\llm\\response.txt",
+    "tts_response_dir": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\tts",
+    "pipeline_log": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_215006\\logs\\pipeline.log"
+  }
+}

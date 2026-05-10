@@ -19,26 +19,37 @@ class PiperTTSEngine:
         self.voice = PiperVoice.load(self.model_path, config_path=self.config_path)
 
     def _ensure_model_exists(self):
-        """Verifica se o modelo existe localmente e faz o download se necessario."""
+        """Verifica se o modelo existe localmente e faz o download se necessário."""
         if os.path.exists(self.model_path) and os.path.exists(self.config_path):
             return
 
-        print(f"[TTSEngine] Modelo '{self.model_name}' nao encontrado localmente.")
-        print("[TTSEngine] Iniciando download automatico. Isso pode demorar alguns minutos...")
+        print(f"[TTSEngine] Modelo '{self.model_name}' não encontrado localmente.")
+        print("[TTSEngine] Iniciando download automático. Isso pode demorar alguns minutos...")
         
         os.makedirs(self.model_dir, exist_ok=True)
         
-        base_url = f"https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/pt/pt_BR/faber/medium/{self.model_name}"
+        # Reconstrói a URL do HuggingFace baseada no nome do modelo
+        # Padrão: pt_BR-faber-medium -> pt/pt_BR/faber/medium/pt_BR-faber-medium
+        parts = self.model_name.split('-')
+        if len(parts) >= 3:
+            lang_code = parts[0] # pt_BR
+            short_lang = lang_code.split('_')[0] # pt
+            voice_name = parts[1] # faber
+            quality = parts[2] # medium
+            base_url = f"https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/{short_lang}/{lang_code}/{voice_name}/{quality}/{self.model_name}"
+        else:
+            # Fallback para o padrão anterior se o nome não seguir o formato
+            base_url = f"https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/pt/pt_BR/faber/medium/{self.model_name}"
         
         try:
             self._download_file(f"{base_url}.onnx", self.model_path)
             self._download_file(f"{base_url}.onnx.json", self.config_path)
-            print("[TTSEngine] Download concluido com sucesso.")
+            print("[TTSEngine] Download concluído com sucesso.")
         except Exception as e:
-            # Em caso de falha, remove arquivos parciais para nao corromper
+            # Em caso de falha, remove arquivos parciais para não corromper
             if os.path.exists(self.model_path): os.remove(self.model_path)
             if os.path.exists(self.config_path): os.remove(self.config_path)
-            raise RuntimeError(f"Falha ao baixar modelo TTS: {e}. Verifique sua conexao e tente novamente.")
+            raise RuntimeError(f"Falha ao baixar modelo TTS: {e}. Verifique sua conexão e tente novamente.")
 
     def _download_file(self, url, dest_path):
         """Metodo auxiliar para download de arquivos."""

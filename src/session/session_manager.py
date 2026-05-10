@@ -68,8 +68,9 @@ class SessionManager:
     def build_metadata(self, stt_model, llm_model, tts_model,
                        stt_time, llm_time, tts_time,
                        detected_language, detected_confidence,
-                       status, transcribed_text, llm_response_text):
-        """Constroi e salva o metadata.json padronizado."""
+                       status, transcribed_text, llm_response_text,
+                       ttft=None, ttfs=None, chunks=None):
+        """Constroi e salva o metadata.json padronizado (com suporte a streaming)."""
         total_time = stt_time + llm_time + tts_time
         metadata = {
             "session_id": self.timestamp,
@@ -85,6 +86,13 @@ class SessionManager:
                 "llm_seconds": round(llm_time, 3),
                 "tts_seconds": round(tts_time, 3),
                 "total_seconds": round(total_time, 3),
+                "ttft_seconds": round(ttft, 3) if ttft is not None else None,
+                "ttfs_seconds": round(ttfs, 3) if ttfs is not None else None,
+            },
+            "streaming": {
+                "is_streaming": ttft is not None,
+                "chunks_count": len(chunks) if chunks else 0,
+                "chunks_details": chunks or []
             },
             "detection": {
                 "language": detected_language,
@@ -99,7 +107,7 @@ class SessionManager:
                 "stt_transcription": self.get_path("stt_transcription"),
                 "llm_prompt": self.get_path("llm_prompt"),
                 "llm_response": self.get_path("llm_response"),
-                "tts_response": self.get_path("tts_response"),
+                "tts_response_dir": os.path.dirname(self.get_path("tts_response")),
                 "pipeline_log": self.get_path("pipeline_log"),
             },
         }

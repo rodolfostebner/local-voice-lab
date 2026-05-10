@@ -1,0 +1,17 @@
+Pode ser feito de várias maneiras:
+
+1. **Verificar em uma janela de rede**: Se você estiver conectado a um roteador ou gateway, pode entrar na janela de rede, encontrar os dados IP e sub-IPs.
+
+2. **Usar o comando `ipconfig` no Windows**:
+   - Abra Command Prompt como administrador.
+   - Digite: `ipconfig /all`
+   - Verifique o campo "IPv4 Address" ou "IPv6 Subnetmask".
+
+3. **Verificar em uma janela de rede do macOS**: Se você estiver conectado a um roteador, pode se aproximar da janela de rede no menu "System Preferences", encontrar os dados IP.
+
+4. **Usar o comando `ifconfig` no Linux**:
+   - Abra Terminal como administrador.
+   - Digite: `ifconfig`
+   - Verifique as redes disponíveis (inserir o número do ip).
+
+5. **Verificar em uma ferramenta de rede online**: Existem muitas opções como o WhatIsMyIP, o IP-Location ou outros recursos que podem fornecer a você o número do seu IP.

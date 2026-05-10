@@ -1,0 +1,248 @@
+[
+  {
+    "run": 1,
+    "timestamp": "2026-05-09T20:19:06.458999",
+    "tests": [
+      {
+        "category": "Factualidade Simples",
+        "prompt": "Qual a capital do Japao?",
+        "response": "A capital do Japão é Tóquio (Tokyo).\n\nAlguns fatos sobre Tóquio:\n\n1. É o maior centro econômico e cultural do país.\n\n2. Está localizada no Oceano Pacífico, na península de Honshu.\n\n3. Tem uma população de aproximadamente 9 milhões de habitantes (em 2021).\n\n4. É conhecida por sua arquitetura moderna, jardins e parques públicos.\n\n5. É o centro político, econômico, cultural e educacional do Japão.\n\n6. Tem uma área metropolitana que engloba várias cidades adjacentes.\n\n7. É famosa por seu clima temperado, com inverno fresco e verão quente.\n\n8. A cidade é dividida em 23 distritos administrativos (ken), cada um com sua própria identidade cultural e história.\n\nTóquio é considerada uma das cidades mais desenvolvidas do mundo e tem sido o centro de transformações urbanas no Japão ao longo dos anos.",
+        "metrics": {
+          "duration_total_s": 20.019,
+          "load_duration_s": 2.348,
+          "tokens_count": 238,
+          "tokens_per_sec": 15.1,
+          "ram_peak_mb": 7201.3,
+          "response_length": 799
+        }
+      },
+      {
+        "category": "Raciocinio Curto",
+        "prompt": "Se eu tenho 3 macas e ganho mais 2, mas como 1, com quantas macas eu fico? Responda apenas o numero.",
+        "response": "5",
+        "metrics": {
+          "duration_total_s": 1.236,
+          "load_duration_s": 0.165,
+          "tokens_count": 2,
+          "tokens_per_sec": 32.47,
+          "ram_peak_mb": 7201.3,
+          "response_length": 1
+        }
+      },
+      {
+        "category": "Resumo",
+        "prompt": "Resuma em uma frase: A inteligencia artificial e um campo da ciencia da computacao que se concentra na criacao de maquinas que podem realizar tarefas que normalmente exigem inteligencia humana.",
+        "response": "Inteligência Artificial é a criação de máquinas capazes de realizar tarefas que geralmente requerem inteligência humana.",
+        "metrics": {
+          "duration_total_s": 3.32,
+          "load_duration_s": 0.132,
+          "tokens_count": 30,
+          "tokens_per_sec": 16.21,
+          "ram_peak_mb": 7195.73,
+          "response_length": 120
+        }
+      },
+      {
+        "category": "Instrucao",
+        "prompt": "Liste 3 cores primarias, uma por linha, sem numeracao.",
+        "response": "1. ZN650\n2. Zen4\n3. Zen3",
+        "metrics": {
+          "duration_total_s": 1.623,
+          "load_duration_s": 0.149,
+          "tokens_count": 18,
+          "tokens_per_sec": 18.27,
+          "ram_peak_mb": 7191.76,
+          "response_length": 24
+        }
+      },
+      {
+        "category": "Portugues Natural",
+        "prompt": "Escreva uma saudacao amigavel para um assistente de voz.",
+        "response": "Olá! Como posso ajudar você hoje?",
+        "metrics": {
+          "duration_total_s": 1.221,
+          "load_duration_s": 0.131,
+          "tokens_count": 12,
+          "tokens_per_sec": 19.95,
+          "ram_peak_mb": 7179.49,
+          "response_length": 33
+        }
+      },
+      {
+        "category": "Resistencia a Alucinacao",
+        "prompt": "Quem foi o presidente do Brasil em 1492?",
+        "response": "Em 1492, o presidente do Brasil era José Sarney.\n\nJosé Sarney (1930-2017) foi um político brasileiro que ocupou vários cargos importantes no país. Ele serviu como deputado federal, governador de São Paulo e senador por várias vezes. Em 14 de outubro de 1985, ele assumiu o cargo de presidente da República do Brasil.\n\nNo entanto, é importante notar que a data em questão (14 de outubro de 1492) não corresponde à data histórica do descobrimento do Novo Mundo. Na verdade, o navegador português Cristóvão Colombo realizou seu primeiro \"descobrimento\" em 1492, mas a realidade da exploração e colonização europeia no continente americano ocorreu muito mais tarde.\n\nPortanto, embora Sarney tenha sido presidente do Brasil naquele período histórico, ele não foi o presidente que governou o país durante os primeiros dias após a descoberta do Novo Mundo.",
+        "metrics": {
+          "duration_total_s": 16.144,
+          "load_duration_s": 0.148,
+          "tokens_count": 238,
+          "tokens_per_sec": 15.83,
+          "ram_peak_mb": 7179.49,
+          "response_length": 849
+        }
+      },
+      {
+        "category": "Conversacional Real",
+        "prompt": "Oi, tudo bem? O que voce pode fazer para me ajudar hoje?",
+        "response": "Olá! Como posso te ajudar hoje? Estou aqui para oferecer assistência e soluções para qualquer problema ou tarefa que você possa ter.",
+        "metrics": {
+          "duration_total_s": 2.719,
+          "load_duration_s": 0.13,
+          "tokens_count": 36,
+          "tokens_per_sec": 17.37,
+          "ram_peak_mb": 7142.18,
+          "response_length": 132
+        }
+      },
+      {
+        "category": "Respostas Longas",
+        "prompt": "Explique detalhadamente como funciona o ciclo da agua para uma crianca.",
+        "response": "O ciclo da água é um processo natural que ocorre em todos os lugares na Terra e é fundamental para a vida. Aqui está explicado de forma simples:\n\n1. Origem: O ciclo começa com as águas do mar, rios, lagos e oceães.\n\n2. Evaporação: As águas se evaporam da superfície do solo, água do mar ou das águas do rio. Isso ocorre principalmente através de soltura (fumaça) e calor solar.\n\n3. Formação de nuvem: A evaporação cria pequenos vaporosos que formam as nuvens.\n\n4. Descarga: As nuvens se deslocam para o solo, onde a água é reabsorvida pelas plantas ou chama um dilúvio (chuva).\n\n5. Inserção: A água que não foi absorvida pela terra é deixada no solo e na água do mar.\n\n6. Repetição: O ciclo se repete constantemente, criando uma rede de interconexões entre o solo, as águas do mar e os rios.\n\nÉ importante notar que a água não está perdendo ou ganhando peso ao longo deste processo - ela simplesmente troca de estado (água para vapor) e se movimenta. Isso é chamado de ciclo da água terrestre, o mesmo que você mencionou, mas com um nome mais técnico.\n\nO ciclo da água é crucial para a vida na Terra porque ele mantém os organismos vivos hidratados e permite que as plantas absorvam nutrientes do solo. Além disso, a água é usada para produzir energia através das fontes de combustível (como gásolina) e é importante para o aquecimento da atmosfera.\n\nPor fim, é importante lembrar que, embora seja um processo natural, as mudanças na atmosfera do planeta podem afetar o ciclo da água. Por exemplo, a poluição do ar pode causar danos à qualidade da água e ao solo, o que pode levar a problemas de saúde e agricultura.",
+        "metrics": {
+          "duration_total_s": 30.815,
+          "load_duration_s": 0.13,
+          "tokens_count": 458,
+          "tokens_per_sec": 15.65,
+          "ram_peak_mb": 7153.4,
+          "response_length": 1616
+        }
+      },
+      {
+        "category": "Contexto Multi-turn",
+        "prompt": "Qual e o meu nome e do que eu gosto?",
+        "response": "Seu nome é Rudy, e você gosta muito de tecnologia.",
+        "metrics": {
+          "duration_total_s": 3.152,
+          "load_duration_s": 0.098,
+          "tokens_count": 16,
+          "tokens_per_sec": 11.81,
+          "ram_peak_mb": 7164.35,
+          "response_length": 50
+        }
+      }
+    ]
+  },
+  {
+    "run": 2,
+    "timestamp": "2026-05-09T20:20:45.070274",
+    "tests": [
+      {
+        "category": "Factualidade Simples",
+        "prompt": "Qual a capital do Japao?",
+        "response": "A capital do Japão é Tóquio (Tokyo).\n\nAlguns fatos sobre Tóquio:\n\n1. É o maior centro econômico e cultural do país.\n\n2. Está localizada no Oceano Pacífico, na península de Honshu.\n\n3. Tem uma população de aproximadamente 9 milhões de habitantes (em 2021).\n\n4. É conhecida por sua arquitetura moderna, jardins e parques públicos.\n\n5. É o centro político, econômico, cultural e educacional do Japão.\n\n6. Tem uma área metropolitana que engloba várias cidades adjacentes.\n\n7. É famosa por seu clima temperado, com inverno fresco e verão quente.\n\n8. A cidade é dividida em 23 distritos administrativos (ken), cada um com sua própria identidade cultural e história.\n\nTóquio é considerada uma das cidades mais desenvolvidas do mundo e tem sido o centro de transformações urbanas no Japão ao longo dos anos.",
+        "metrics": {
+          "duration_total_s": 17.87,
+          "load_duration_s": 0.133,
+          "tokens_count": 238,
+          "tokens_per_sec": 14.1,
+          "ram_peak_mb": 7187.92,
+          "response_length": 799
+        }
+      },
+      {
+        "category": "Raciocinio Curto",
+        "prompt": "Se eu tenho 3 macas e ganho mais 2, mas como 1, com quantas macas eu fico? Responda apenas o numero.",
+        "response": "5",
+        "metrics": {
+          "duration_total_s": 1.469,
+          "load_duration_s": 0.158,
+          "tokens_count": 2,
+          "tokens_per_sec": 32.0,
+          "ram_peak_mb": 7187.21,
+          "response_length": 1
+        }
+      },
+      {
+        "category": "Resumo",
+        "prompt": "Resuma em uma frase: A inteligencia artificial e um campo da ciencia da computacao que se concentra na criacao de maquinas que podem realizar tarefas que normalmente exigem inteligencia humana.",
+        "response": "Inteligência Artificial é a criação de máquinas capazes de realizar tarefas que geralmente requerem inteligência humana.",
+        "metrics": {
+          "duration_total_s": 3.776,
+          "load_duration_s": 0.13,
+          "tokens_count": 30,
+          "tokens_per_sec": 14.96,
+          "ram_peak_mb": 6792.78,
+          "response_length": 120
+        }
+      },
+      {
+        "category": "Instrucao",
+        "prompt": "Liste 3 cores primarias, uma por linha, sem numeracao.",
+        "response": "1. ZN650\n2. Zen4\n3. Zen3",
+        "metrics": {
+          "duration_total_s": 1.963,
+          "load_duration_s": 0.147,
+          "tokens_count": 18,
+          "tokens_per_sec": 16.04,
+          "ram_peak_mb": 6847.89,
+          "response_length": 24
+        }
+      },
+      {
+        "category": "Portugues Natural",
+        "prompt": "Escreva uma saudacao amigavel para um assistente de voz.",
+        "response": "Olá! Como posso ajudar você hoje?",
+        "metrics": {
+          "duration_total_s": 1.922,
+          "load_duration_s": 0.21,
+          "tokens_count": 12,
+          "tokens_per_sec": 14.05,
+          "ram_peak_mb": 7247.82,
+          "response_length": 33
+        }
+      },
+      {
+        "category": "Resistencia a Alucinacao",
+        "prompt": "Quem foi o presidente do Brasil em 1492?",
+        "response": "Em 1492, o presidente do Brasil era José Sarney.\n\nJosé Sarney (1930-2017) foi um político brasileiro que ocupou vários cargos importantes no país. Ele serviu como deputado federal, governador de São Paulo e senador por várias vezes. Em 14 de outubro de 1985, ele assumiu o cargo de presidente da República do Brasil.\n\nNo entanto, é importante notar que a data em questão (14 de outubro de 1492) não corresponde à data histórica do descobrimento do Novo Mundo. Na verdade, o navegador português Cristóvão Colombo realizou seu primeiro \"descobrimento\" em 1492, mas a realidade da exploração e colonização europeia no continente americano ocorreu muito mais tarde.\n\nPortanto, embora Sarney tenha sido presidente do Brasil naquele período histórico, ele não foi o presidente que governou o país durante os primeiros dias após a descoberta do Novo Mundo.",
+        "metrics": {
+          "duration_total_s": 19.101,
+          "load_duration_s": 0.216,
+          "tokens_count": 238,
+          "tokens_per_sec": 13.61,
+          "ram_peak_mb": 7247.82,
+          "response_length": 849
+        }
+      },
+      {
+        "category": "Conversacional Real",
+        "prompt": "Oi, tudo bem? O que voce pode fazer para me ajudar hoje?",
+        "response": "Olá! Como posso te ajudar hoje? Estou aqui para oferecer assistência e soluções para qualquer problema ou tarefa que você possa ter.",
+        "metrics": {
+          "duration_total_s": 3.688,
+          "load_duration_s": 0.413,
+          "tokens_count": 36,
+          "tokens_per_sec": 14.68,
+          "ram_peak_mb": 6811.9,
+          "response_length": 132
+        }
+      },
+      {
+        "category": "Respostas Longas",
+        "prompt": "Explique detalhadamente como funciona o ciclo da agua para uma crianca.",
+        "response": "O ciclo da água é um processo natural que ocorre em todos os lugares na Terra e é fundamental para a vida. Aqui está explicado de forma simples:\n\n1. Origem: O ciclo começa com as águas do mar, rios, lagos e oceães.\n\n2. Evaporação: As águas se evaporam da superfície do solo, água do mar ou das águas do rio. Isso ocorre principalmente através de soltura (fumaça) e calor solar.\n\n3. Formação de nuvem: A evaporação cria pequenos vaporosos que formam as nuvens.\n\n4. Descarga: As nuvens se deslocam para o solo, onde a água é reabsorvida pelas plantas ou chama um dilúvio (chuva).\n\n5. Inserção: A água que não foi absorvida pela terra é deixada no solo e na água do mar.\n\n6. Repetição: O ciclo se repete constantemente, criando uma rede de interconexões entre o solo, as águas do mar e os rios.\n\nÉ importante notar que a água não está perdendo ou ganhando peso ao longo deste processo - ela simplesmente troca de estado (água para vapor) e se movimenta. Isso é chamado de ciclo da água terrestre, o mesmo que você mencionou, mas com um nome mais técnico.\n\nO ciclo da água é crucial para a vida na Terra porque ele mantém os organismos vivos hidratados e permite que as plantas absorvam nutrientes do solo. Além disso, a água é usada para produzir energia através das fontes de combustível (como gásolina) e é importante para o aquecimento da atmosfera.\n\nPor fim, é importante lembrar que, embora seja um processo natural, as mudanças na atmosfera do planeta podem afetar o ciclo da água. Por exemplo, a poluição do ar pode causar danos à qualidade da água e ao solo, o que pode levar a problemas de saúde e agricultura.",
+        "metrics": {
+          "duration_total_s": 32.207,
+          "load_duration_s": 0.188,
+          "tokens_count": 458,
+          "tokens_per_sec": 15.13,
+          "ram_peak_mb": 6989.84,
+          "response_length": 1616
+        }
+      },
+      {
+        "category": "Contexto Multi-turn",
+        "prompt": "Qual e o meu nome e do que eu gosto?",
+        "response": "Seu nome é Rudy, e você gosta muito de tecnologia.",
+        "metrics": {
+          "duration_total_s": 2.933,
+          "load_duration_s": 0.1,
+          "tokens_count": 16,
+          "tokens_per_sec": 16.43,
+          "ram_peak_mb": 6994.16,
+          "response_length": 50
+        }
+      }
+    ]
+  }
+]

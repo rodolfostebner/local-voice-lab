@@ -37,3 +37,18 @@ class OllamaClient:
         # mas mantemos metricas basicas aqui se necessario.
         
         return response_text, inference_time
+
+    def generate_stream(self, prompt, system_prompt="Você é um assistente prestativo e conciso. Responda diretamente e sem formatação excessiva."):
+        """
+        Gera uma resposta via streaming (Generator).
+        Retorna um iterador de tokens.
+        """
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt}
+        ]
+        
+        # Realiza a chamada streaming para o Ollama
+        for chunk in self.client.chat(model=self.model, messages=messages, stream=True):
+            yield chunk['message']['content']
+

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="Voice Lab - Local AI Voice Assistant">
+    <title>Voice Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header id="header">
+            <div class="header-left">
+                <div class="logo-dot"></div>
+                <h1>Voice Lab</h1>
+            </div>
+            <div class="header-right">
+                <div id="connection-dot" class="dot disconnected" title="Desconectado"></div>
+            </div>
+        </header>
+
+        <!-- State Banner -->
+        <div id="state-banner" class="state-idle">
+            <span id="state-icon">●</span>
+            <span id="state-label">Pronto</span>
+        </div>
+
+        <!-- Chat Area -->
+        <main id="chat-area">
+            <div id="messages"></div>
+        </main>
+
+        <!-- Metrics Strip -->
+        <div id="metrics-strip">
+            <div class="metric">
+                <span class="metric-label">TTFT</span>
+                <span class="metric-value" id="metric-ttft">—</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">TTFS</span>
+                <span class="metric-value" id="metric-ttfs">—</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Total</span>
+                <span class="metric-value" id="metric-total">—</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Chunks</span>
+                <span class="metric-value" id="metric-chunks">—</span>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <footer id="controls">
+            <!-- Settings Row -->
+            <div class="settings-row">
+                <select id="mode-select" title="Modo LLM">
+                    <option value="fast">⚡ Fast</option>
+                    <option value="standard">⚖️ Standard</option>
+                    <option value="premium" selected>💎 Premium</option>
+                </select>
+
+                <select id="voice-select" title="Voz TTS">
+                    <option value="pt_BR-faber-medium">🗣️ Faber</option>
+                    <option value="pt_BR-edresson-low">🗣️ Edresson</option>
+                </select>
+
+                <button id="voice-toggle" class="toggle-btn active" title="Responder por voz">
+                    🔊
+                </button>
+
+                <button id="cancel-btn" class="cancel-button" aria-label="Cancelar" style="visibility:hidden">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Input Row -->
+            <div class="input-row">
+                <input type="text" id="text-input" placeholder="Digite uma mensagem..." autocomplete="off">
+                <button id="send-btn" class="send-button" aria-label="Enviar" title="Enviar">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+                <button id="ptt-btn" class="ptt-button" aria-label="Push to Talk">
+                    <svg id="mic-icon" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                    <svg id="stop-icon" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" style="display:none">
+                        <rect x="6" y="6" width="12" height="12" rx="2"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div id="model-label" class="model-label">gemma3:4b</div>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

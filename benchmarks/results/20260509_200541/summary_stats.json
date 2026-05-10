@@ -1,0 +1,42 @@
+{
+  "qwen2.5:0.5b": {
+    "duration_total_s": {
+      "min": 0.772,
+      "max": 5.758,
+      "mean": 2.781,
+      "stdev": 1.532
+    },
+    "tokens_per_sec": {
+      "min": 35.45,
+      "max": 50.49,
+      "mean": 39.809,
+      "stdev": 5.103
+    },
+    "ram_peak_mb": {
+      "min": 6733.85,
+      "max": 6822.09,
+      "mean": 6784.508,
+      "stdev": 37.106
+    }
+  },
+  "llama3.2:1b": {
+    "duration_total_s": {
+      "min": 0.915,
+      "max": 5.417,
+      "mean": 2.985,
+      "stdev": 1.824
+    },
+    "tokens_per_sec": {
+      "min": 12.42,
+      "max": 23.87,
+      "mean": 16.457,
+      "stdev": 3.538
+    },
+    "ram_peak_mb": {
+      "min": 7010.4,
+      "max": 7159.86,
+      "mean": 7115.687,
+      "stdev": 52.476
+    }
+  }
+}
