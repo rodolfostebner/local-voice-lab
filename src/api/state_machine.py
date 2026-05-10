@@ -16,6 +16,7 @@ class ConversationState(str, Enum):
     LISTENING = "listening"
     TRANSCRIBING = "transcribing"
     THINKING = "thinking"
+    QUEUED = "queued"
     SPEAKING = "speaking"
     ERROR = "error"
 
@@ -24,7 +25,8 @@ class ConversationState(str, Enum):
 VALID_TRANSITIONS = {
     ConversationState.IDLE:          [ConversationState.LISTENING, ConversationState.ERROR],
     ConversationState.LISTENING:     [ConversationState.TRANSCRIBING, ConversationState.IDLE, ConversationState.ERROR],
-    ConversationState.TRANSCRIBING:  [ConversationState.THINKING, ConversationState.IDLE, ConversationState.ERROR],
+    ConversationState.TRANSCRIBING:  [ConversationState.THINKING, ConversationState.QUEUED, ConversationState.IDLE, ConversationState.ERROR],
+    ConversationState.QUEUED:        [ConversationState.THINKING, ConversationState.IDLE, ConversationState.ERROR],
     ConversationState.THINKING:      [ConversationState.SPEAKING, ConversationState.IDLE, ConversationState.ERROR],
     ConversationState.SPEAKING:      [ConversationState.IDLE, ConversationState.ERROR],
     ConversationState.ERROR:         [ConversationState.IDLE],

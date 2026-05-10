@@ -62,6 +62,8 @@ const textInput       = $('text-input');
 const sendBtn         = $('send-btn');
 const modelLabel      = $('model-label');
 const connectionDot   = $('connection-dot');
+const connectionStatus = $('connection-status');
+const clearBtn         = $('clear-btn');
 const metricTTFT      = $('metric-ttft');
 const metricTTFS      = $('metric-ttfs');
 const metricTotal     = $('metric-total');
@@ -70,26 +72,40 @@ const metricChunks    = $('metric-chunks');
 
 // ─── WebSocket ───────────────────────────────────────────────
 function connect() {
+    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    ws = new WebSocket(`${protocol}//${location.host}/ws`);
+    const wsUrl = `${protocol}//${location.host}/ws`;
+    
+    console.log(`[WS] Conectando a ${wsUrl}...`);
+    connectionDot.className = 'dot reconnecting';
+    connectionStatus.textContent = 'Conectando...';
+
+    ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
         connectionDot.className = 'dot connected';
         connectionDot.title = 'Conectado';
-        addSystemMessage('Conectado ao Voice Lab');
+        connectionStatus.textContent = 'Online';
+        console.log('[WS] Conectado');
         if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
-
-        // Sync preferences to backend
         syncConfig();
     };
 
     ws.onclose = () => {
         connectionDot.className = 'dot disconnected';
         connectionDot.title = 'Desconectado';
-        reconnectTimer = setTimeout(connect, 3000);
+        connectionStatus.textContent = 'Offline';
+        console.log('[WS] Desconectado. Tentando reconectar...');
+        if (!reconnectTimer) {
+            reconnectTimer = setTimeout(connect, 3000);
+        }
     };
 
-    ws.onerror = () => { ws.close(); };
+    ws.onerror = (err) => {
+        console.error('[WS] Erro:', err);
+        ws.close();
+    };
 
     ws.onmessage = (e) => {
         const msg = JSON.parse(e.data);
@@ -142,6 +158,12 @@ function handleEvent(msg) {
             if (data.chunks_count !== undefined) metricChunks.textContent = data.chunks_count;
             break;
 
+        case 'chat_cleared':
+            messagesEl.innerHTML = '';
+            addSystemMessage('Conversa limpa');
+            resetMetrics();
+            break;
+
         case 'error':
             addSystemMessage('⚠️ ' + (data.message || 'Erro desconhecido'));
             finalizeStreaming();
@@ -155,6 +177,7 @@ const STATE_CONFIG = {
     idle:          { icon: '●', label: 'Pronto',          class: 'state-idle' },
     listening:     { icon: '◉', label: 'Ouvindo...',      class: 'state-listening' },
     transcribing:  { icon: '◎', label: 'Transcrevendo...', class: 'state-transcribing' },
+    queued:        { icon: '⏳', label: 'Na Fila...',       class: 'state-queued' },
     thinking:      { icon: '◈', label: 'Pensando...',     class: 'state-thinking' },
     speaking:      { icon: '◆', label: 'Falando...',      class: 'state-speaking' },
     error:         { icon: '✕', label: 'Erro',            class: 'state-error' },
@@ -192,12 +215,12 @@ function addMessage(role, text) {
     scrollToBottom();
 }
 
-function addSystemMessage(text) {
+function addSystemMessage(text, isError = false) {
     const el = document.createElement('div');
-    el.className = 'message system';
+    el.className = `message system ${isError ? 'error' : ''}`;
     el.textContent = text;
     messagesEl.appendChild(el);
-    scrollToBottom();
+    scrollToBottom(true);
 }
 
 function appendToStreaming(token) {
@@ -206,6 +229,7 @@ function appendToStreaming(token) {
         streamingMsgEl.className = 'message assistant streaming';
         messagesEl.appendChild(streamingMsgEl);
     }
+    // Adiciona o token sem causar saltos bruscos
     streamingMsgEl.textContent += token;
     scrollToBottom();
 }
@@ -217,9 +241,16 @@ function finalizeStreaming() {
     }
 }
 
-function scrollToBottom() {
+function scrollToBottom(force = false) {
     const chatArea = $('chat-area');
-    chatArea.scrollTop = chatArea.scrollHeight;
+    const isNearBottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight < 100;
+    
+    if (force || isNearBottom) {
+        chatArea.scrollTo({
+            top: chatArea.scrollHeight,
+            behavior: 'smooth'
+        });
+    }
 }
 
 
@@ -228,8 +259,7 @@ function sendTextMessage() {
     const text = textInput.value.trim();
     if (!text || currentState !== 'idle') return;
 
-    // Show user message immediately
-    addMessage('user', text);
+    // Show user message via transcription_complete event (Source of Truth)
     textInput.value = '';
 
     // Reset metrics
@@ -276,7 +306,9 @@ async function startRecording() {
         resetMetrics();
 
     } catch (err) {
-        addSystemMessage('⚠️ Microfone não disponível: ' + err.message);
+        addSystemMessage('⚠️ Microfone bloqueado. Verifique as permissões de HTTPS no seu navegador.', true);
+        console.error('[Audio] Erro:', err);
+        updateState('idle');
     }
 }
 
@@ -369,6 +401,18 @@ voiceToggle.addEventListener('click', () => {
     voiceToggle.textContent = voiceEnabled ? '🔊' : '🔇';
     syncConfig();
     savePrefs();
+});
+
+// Clear Chat
+clearBtn.addEventListener('click', () => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ action: 'clear_chat' }));
+    } else {
+        // Fallback local se estiver offline
+        messagesEl.innerHTML = '';
+        addSystemMessage('Conversa limpa (local)');
+        resetMetrics();
+    }
 });
 
 

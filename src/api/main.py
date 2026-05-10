@@ -107,11 +107,36 @@ AVAILABLE_VOICES = {
 }
 
 
+# ─── Inference Queue & Worker ────────────────────────────────
+request_queue = asyncio.Queue()
+reconnect_count = 0  # Global monitor for stability audit
+
+async def inference_worker():
+    """Consome a fila de inferência sequencialmente para evitar sobrecarga."""
+    print("[Queue] Worker iniciado.")
+    while True:
+        task = await request_queue.get()
+        func, args, kwargs = task
+        try:
+            # Executa a pipeline (bloqueante, em thread para não travar o loop)
+            # Mas a fila garante que apenas UM por vez seja processado
+            await asyncio.to_thread(func, *args, **kwargs)
+        except Exception as e:
+            print(f"[Queue] Erro ao processar task: {e}")
+            state_machine.emit_event("error", {"message": str(e)})
+        finally:
+            # Garante que o estado sempre volta para IDLE após processamento
+            state_machine.reset()
+            request_queue.task_done()
+
 # ─── Lifespan ─────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app):
     on_state_event._loop = asyncio.get_event_loop()
+    # Inicia o worker de inferência
+    worker_task = asyncio.create_task(inference_worker())
     yield
+    worker_task.cancel()
 
 
 # ─── App Setup ───────────────────────────────────────────────
@@ -306,6 +331,11 @@ async def websocket_endpoint(ws: WebSocket):
 
             elif action == "cancel":
                 state_machine.reset()
+                
+            elif action == "clear_chat":
+                # Reseta o estado mas mantém o SessionManager pronto para nova interação
+                state_machine.reset()
+                await ws.send_json({"event": "chat_cleared", "timestamp": time.time()})
 
     except WebSocketDisconnect:
         pass
@@ -319,13 +349,16 @@ async def websocket_endpoint(ws: WebSocket):
 def process_text_pipeline(user_text: str):
     """Pipeline para input de texto — skip STT, vai direto ao LLM."""
     session = SessionManager()
-    try:
-        _run_llm_tts_pipeline(session, user_text, stt_time=0, stt_info=None)
-    except Exception as e:
-        state_machine.emit_event("error", {"message": str(e)})
-        print(f"[Pipeline] ERRO: {e}")
-    finally:
-        state_machine.reset()
+    
+    # Se já houver alguém na fila, avisamos o usuário
+    if request_queue.qsize() > 0:
+        state_machine.transition_to(ConversationState.QUEUED, {"queue_pos": request_queue.qsize()})
+
+    # Adiciona à fila de inferência
+    asyncio.run_coroutine_threadsafe(
+        request_queue.put((_run_llm_tts_pipeline, (session, user_text, 0, None), {})),
+        on_state_event._loop
+    )
 
 
 # ─── Pipeline: Voice Input ────────────────────────────────────
@@ -352,6 +385,13 @@ def process_voice_pipeline(audio_b64: str):
             state_machine.reset()
             return
 
+        # Cleanup temp webm (M8.2 Hardening)
+        try:
+            if os.path.exists(webm_path):
+                os.remove(webm_path)
+        except Exception as e:
+            print(f"[Cleanup] Erro ao remover webm: {e}")
+
         stt = get_stt()
         transcribed_text, stt_time, stt_info = stt.transcribe(input_path)
 
@@ -366,13 +406,19 @@ def process_voice_pipeline(audio_b64: str):
             "stt_time": round(stt_time, 3),
         })
 
-        _run_llm_tts_pipeline(session, transcribed_text, stt_time, stt_info)
+        # Se já houver alguém na fila, avisamos o usuário
+        if request_queue.qsize() > 0:
+            state_machine.transition_to(ConversationState.QUEUED, {"queue_pos": request_queue.qsize()})
+
+        # Adiciona à fila de inferência
+        asyncio.run_coroutine_threadsafe(
+            request_queue.put((_run_llm_tts_pipeline, (session, transcribed_text, stt_time, stt_info), {})),
+            on_state_event._loop
+        )
 
     except Exception as e:
         state_machine.emit_event("error", {"message": str(e)})
         print(f"[Pipeline] ERRO: {e}")
-    finally:
-        state_machine.reset()
 
 
 # ─── Shared LLM → TTS Pipeline ───────────────────────────────
@@ -447,7 +493,11 @@ def _run_llm_tts_pipeline(session, user_text: str, stt_time: float, stt_info):
         tts.play_audio(chunk_path)
         chunks_meta.append({"id": chunk_count, "text": remaining, "path": chunk_path, "gen_time": 0})
 
+    # Metrics calculation
     total_llm_time = time.time() - llm_start
+    queue_pos = kwargs.get("queue_pos", 0) # Track if it was queued
+
+    # Persist
 
     # If voice was disabled, still transition through states
     if not current_config["voice_enabled"] and state_machine.state == ConversationState.THINKING:
@@ -494,5 +544,22 @@ def _run_llm_tts_pipeline(session, user_text: str, stt_time: float, stt_info):
 # ─── Main ─────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
-    print("[VoiceLab] Iniciando servidor em http://0.0.0.0:8000")
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    
+    # Configuração TLS (M8)
+    cert_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "models", "certs", "cert.pem")
+    key_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "models", "certs", "key.pem")
+    
+    ssl_config = {}
+    if os.path.exists(cert_path) and os.path.exists(key_path):
+        print(f"\n[VoiceLab] ✅ HTTPS ATIVO: https://192.168.68.110:8000")
+        print(f"[VoiceLab] ✅ Acesso LAN: https://192.168.68.110:8000")
+        print("[VoiceLab] 💡 IMPORTANTE: No celular, aceite o 'Aviso de Segurança' para habilitar o microfone.\n")
+        ssl_config = {
+            "ssl_certfile": cert_path,
+            "ssl_keyfile": key_path
+        }
+    else:
+        print("[VoiceLab] ⚠️ TLS NÃO detectado. Iniciando em http://0.0.0.0:8000")
+        print("[VoiceLab] ⚠️ AVISO: Microfone mobile pode não funcionar sem HTTPS.")
+
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", **ssl_config)

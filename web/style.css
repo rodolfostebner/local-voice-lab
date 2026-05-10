@@ -55,11 +55,41 @@ html, body {
 /* ─── Header ──────────────────────────────── */
 header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 12px 20px;
+    justify-content: space-between;
+    padding: 10px 16px;
     background: var(--bg-secondary);
     border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#connection-status {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition);
+    opacity: 0.6;
+}
+
+.icon-btn:hover {
+    background: var(--bg-card);
+    opacity: 1;
 }
 
 .header-left {
@@ -90,7 +120,12 @@ header h1 {
 }
 
 .dot.connected { background: var(--success); box-shadow: 0 0 8px rgba(34,197,94,0.4); }
-.dot.disconnected { background: var(--danger); }
+.dot.disconnected { background: var(--danger); box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+.dot.reconnecting { 
+    background: var(--warning); 
+    box-shadow: 0 0 8px rgba(245,158,11,0.4);
+    animation: pulse 1s infinite;
+}
 
 /* ─── State Banner ────────────────────────── */
 #state-banner {
@@ -109,6 +144,7 @@ header h1 {
 .state-idle         { background: var(--bg-card); color: var(--text-muted); }
 .state-listening    { background: rgba(34,197,94,0.1); color: var(--listening); }
 .state-transcribing { background: rgba(245,158,11,0.1); color: var(--warning); }
+.state-queued       { background: rgba(245,158,11,0.15); color: var(--warning); border-bottom: 2px solid var(--warning); }
 .state-thinking     { background: rgba(59,130,246,0.1); color: var(--thinking); }
 .state-speaking     { background: rgba(139,92,246,0.1); color: var(--speaking); }
 .state-error        { background: rgba(239,68,68,0.1); color: var(--danger); }
@@ -179,6 +215,11 @@ header h1 {
     color: var(--text-muted);
     font-size: 12px;
     padding: 4px 0;
+}
+
+.message.system.error {
+    color: var(--danger);
+    font-weight: 500;
 }
 
 @keyframes fadeIn {
