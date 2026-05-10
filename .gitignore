@@ -14,3 +14,5 @@ _build/
 squads/local-voice-lab/output/
 squads/local-voice-lab/state.json
 .vscode/
+*.wav
+output/
