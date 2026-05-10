@@ -1,0 +1,46 @@
+{
+  "session_id": "20260509_224728",
+  "timestamp": "2026-05-09T22:48:01.569680",
+  "status": "success",
+  "models": {
+    "stt": "base",
+    "llm": "qwen2.5:0.5b",
+    "tts": "pt_BR-edresson-low"
+  },
+  "timings": {
+    "stt_seconds": 0,
+    "llm_seconds": 17.395,
+    "tts_seconds": 0,
+    "total_seconds": 17.395,
+    "ttft_seconds": 10.731,
+    "ttfs_seconds": 13.004
+  },
+  "streaming": {
+    "is_streaming": true,
+    "chunks_count": 1,
+    "chunks_details": [
+      {
+        "id": 1,
+        "text": "Olá! Estou bem, obrigado. Como posso ajudar hoje?",
+        "path": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_224728\\tts\\chunks\\chunk_001.wav",
+        "gen_time": 1.184
+      }
+    ]
+  },
+  "detection": {
+    "language": "text",
+    "confidence": 0.0
+  },
+  "content": {
+    "transcription": "Hello, how are you?",
+    "llm_response": "Olá! Estou bem, obrigado. Como posso ajudar hoje?"
+  },
+  "paths": {
+    "mic_input": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_224728\\input\\mic_input.wav",
+    "stt_transcription": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_224728\\input\\stt_transcription.txt",
+    "llm_prompt": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_224728\\llm\\prompt.txt",
+    "llm_response": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_224728\\llm\\response.txt",
+    "tts_response_dir": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_224728\\tts",
+    "pipeline_log": "D:\\OneDrive - wizardblumenau.com.br\\APP PROJECTS\\VOZ_LOCAL_LLM\\output\\sessions\\20260509_224728\\logs\\pipeline.log"
+  }
+}
