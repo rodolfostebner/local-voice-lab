@@ -1,0 +1,12 @@
+{
+  "id": "friendly_female_warm",
+  "display_name": "Feminina Acolhedora",
+  "engine": "piper",
+  "model": "pt_BR-edresson-low",
+  "voice_traits": {
+    "speaking_rate": 1.1,
+    "sentence_pause": 0.1,
+    "chunk_pause": 0.2,
+    "pitch_bias": 1.05
+  }
+}

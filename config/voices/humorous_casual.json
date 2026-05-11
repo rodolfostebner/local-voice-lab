@@ -1,0 +1,12 @@
+{
+  "id": "humorous_casual",
+  "display_name": "Casual Bem-Humorada",
+  "engine": "piper",
+  "model": "pt_BR-edresson-low",
+  "voice_traits": {
+    "speaking_rate": 1.05,
+    "sentence_pause": 0.15,
+    "chunk_pause": 0.2,
+    "pitch_bias": 1.05
+  }
+}

@@ -6,6 +6,7 @@ que causam artefatos na síntese de voz. O texto original é preservado
 no chat; apenas o TTS recebe a versão sanitizada.
 """
 import re
+import unicodedata
 
 
 def sanitize_for_tts(text: str) -> str:
@@ -50,6 +51,19 @@ def sanitize_for_tts(text: str) -> str:
 
     # Remove links markdown [text](url) → text
     t = re.sub(r'\[([^\]]+)\]\([^\)]+\)', r'\1', t)
+
+    # Normaliza aspas e hífens complexos
+    t = t.replace('“', '"').replace('”', '"').replace('‘', "'").replace('’', "'")
+    t = t.replace('—', '-').replace('–', '-')
+
+    # Normaliza unicode para caracteres pré-compostos (NFC)
+    t = unicodedata.normalize('NFC', t)
+    
+    # Remove qualquer marca diacrítica combinante (como til solto) que não compôs um caractere válido
+    t = re.sub(r'[\u0300-\u036f]', '', t)
+
+    # Remove asteriscos residuais e outros símbolos que quebram phoneme map
+    t = re.sub(r'[*#@~|^\\_<>]', '', t)
 
     # Remove URLs soltas
     t = re.sub(r'https?://\S+', '', t)

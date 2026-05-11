@@ -1,0 +1,12 @@
+{
+  "id": "futuristic_assistant",
+  "display_name": "Assistente Futurista",
+  "engine": "piper",
+  "model": "pt_BR-edresson-low",
+  "voice_traits": {
+    "speaking_rate": 1.2,
+    "sentence_pause": 0.05,
+    "chunk_pause": 0.1,
+    "pitch_bias": 1.0
+  }
+}

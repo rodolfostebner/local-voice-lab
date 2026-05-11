@@ -1,0 +1,12 @@
+{
+  "id": "spiritual_serene",
+  "display_name": "Serena Espiritual",
+  "engine": "piper",
+  "model": "pt_BR-faber-medium",
+  "voice_traits": {
+    "speaking_rate": 0.8,
+    "sentence_pause": 0.5,
+    "chunk_pause": 0.6,
+    "pitch_bias": 0.9
+  }
+}

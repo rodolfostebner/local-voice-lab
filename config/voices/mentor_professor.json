@@ -1,0 +1,12 @@
+{
+  "id": "mentor_professor",
+  "display_name": "Professor Mentor",
+  "engine": "piper",
+  "model": "pt_BR-faber-medium",
+  "voice_traits": {
+    "speaking_rate": 0.9,
+    "sentence_pause": 0.3,
+    "chunk_pause": 0.4,
+    "pitch_bias": 0.95
+  }
+}

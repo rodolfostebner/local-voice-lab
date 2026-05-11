@@ -1,0 +1,12 @@
+{
+  "id": "dry_direct",
+  "display_name": "Seca e Direta",
+  "engine": "piper",
+  "model": "pt_BR-jeff-medium",
+  "voice_traits": {
+    "speaking_rate": 0.95,
+    "sentence_pause": 0.2,
+    "chunk_pause": 0.3,
+    "pitch_bias": 0.9
+  }
+}

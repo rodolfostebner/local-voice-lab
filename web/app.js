@@ -31,7 +31,7 @@ function loadPrefs() {
         const prefs = JSON.parse(localStorage.getItem('voicelab_prefs'));
         if (prefs) {
             if (prefs.mode) modeSelect.value = prefs.mode;
-            if (prefs.voice) voiceSelect.value = prefs.voice;
+            if (prefs.persona) personaSelect.value = prefs.persona;
             if (prefs.voiceEnabled !== undefined) {
                 voiceEnabled = prefs.voiceEnabled;
                 voiceToggle.classList.toggle('active', voiceEnabled);
@@ -44,7 +44,7 @@ function loadPrefs() {
 function savePrefs() {
     localStorage.setItem('voicelab_prefs', JSON.stringify({
         mode: modeSelect.value,
-        voice: voiceSelect.value,
+        persona: personaSelect.value,
         voiceEnabled: voiceEnabled,
     }));
 }
@@ -60,8 +60,8 @@ const pttBtn          = $('ptt-btn');
 const micIcon         = $('mic-icon');
 const stopIcon        = $('stop-icon');
 const cancelBtn       = $('cancel-btn');
+const personaSelect   = $('persona-select');
 const modeSelect      = $('mode-select');
-const voiceSelect     = $('voice-select');
 const voiceToggle     = $('voice-toggle');
 const textInput       = $('text-input');
 const sendBtn         = $('send-btn');
@@ -130,6 +130,23 @@ function handleEvent(msg) {
             if (data.config && !localStorage.getItem('voicelab_prefs')) {
                 modelLabel.textContent = data.config.llm_model || 'gemma3:4b';
             }
+            if (data.personas && personaSelect) {
+                const currentVal = personaSelect.value;
+                personaSelect.innerHTML = '';
+                data.personas.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = `👤 ${p.display_name}`;
+                    personaSelect.appendChild(opt);
+                });
+                const prefs = JSON.parse(localStorage.getItem('voicelab_prefs') || '{}');
+                if (prefs.persona) {
+                    personaSelect.value = prefs.persona;
+                } else if (currentVal) {
+                    personaSelect.value = currentVal;
+                }
+                syncPersona();
+            }
             break;
 
         case 'ack':
@@ -137,6 +154,12 @@ function handleEvent(msg) {
 
         case 'state_changed':
             updateState(data.to);
+            break;
+
+        case 'persona_changed':
+            if (data.greeting) {
+                addSystemMessage(`[${data.persona_id}] ${data.greeting}`);
+            }
             break;
 
         case 'transcription_complete':
@@ -404,8 +427,16 @@ function syncConfig() {
         ws.send(JSON.stringify({
             action: 'config',
             mode: mode,
-            tts_voice: voiceSelect.value,
             voice_enabled: voiceEnabled,
+        }));
+    }
+}
+
+function syncPersona() {
+    if (ws && ws.readyState === WebSocket.OPEN && personaSelect.value) {
+        ws.send(JSON.stringify({
+            action: 'set_persona',
+            persona_id: personaSelect.value,
         }));
     }
 }
@@ -457,11 +488,13 @@ modeSelect.addEventListener('change', () => {
     savePrefs();
 });
 
-// Voice selector
-voiceSelect.addEventListener('change', () => {
-    syncConfig();
-    savePrefs();
-});
+// Persona selector
+if (personaSelect) {
+    personaSelect.addEventListener('change', () => {
+        syncPersona();
+        savePrefs();
+    });
+}
 
 // Voice toggle
 voiceToggle.addEventListener('click', () => {

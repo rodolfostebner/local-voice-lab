@@ -1,0 +1,12 @@
+{
+  "id": "creative_energetic",
+  "display_name": "Criativa Energética",
+  "engine": "piper",
+  "model": "pt_BR-jeff-medium",
+  "voice_traits": {
+    "speaking_rate": 1.15,
+    "sentence_pause": 0.1,
+    "chunk_pause": 0.15,
+    "pitch_bias": 1.1
+  }
+}

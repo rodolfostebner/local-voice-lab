@@ -1,0 +1,12 @@
+{
+  "id": "investigator_deep",
+  "display_name": "Investigador Analítico",
+  "engine": "piper",
+  "model": "pt_BR-jeff-medium",
+  "voice_traits": {
+    "speaking_rate": 0.85,
+    "sentence_pause": 0.4,
+    "chunk_pause": 0.5,
+    "pitch_bias": 0.85
+  }
+}

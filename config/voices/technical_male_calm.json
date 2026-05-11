@@ -1,0 +1,12 @@
+{
+  "id": "technical_male_calm",
+  "display_name": "Masculina Técnica",
+  "engine": "piper",
+  "model": "pt_BR-jeff-medium",
+  "voice_traits": {
+    "speaking_rate": 1.0,
+    "sentence_pause": 0.15,
+    "chunk_pause": 0.25,
+    "pitch_bias": 0.95
+  }
+}

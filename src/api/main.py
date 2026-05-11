@@ -29,6 +29,12 @@ from src.llm.ollama_client import OllamaClient
 from src.stt.whisper_engine import WhisperEngine
 from src.tts.tts_engine import PiperTTSEngine
 from src.session.session_manager import SessionManager
+from src.session.persona_manager import PersonaManager
+from src.llm.prompt_builder import PromptBuilder
+from src.tts.voice_manager import VoiceManager
+
+persona_manager = PersonaManager()
+voice_manager = VoiceManager()
 
 import re
 
@@ -91,21 +97,7 @@ def chunk_for_tts(text: str) -> list[str]:
     return chunks
 
 
-# ─── Available Voices ─────────────────────────────────────────
-AVAILABLE_VOICES = {
-    "pt_BR-faber-medium": {
-        "name": "Faber",
-        "lang": "pt-BR",
-        "gender": "Masculina",
-        "url_base": "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/pt/pt_BR/faber/medium/pt_BR-faber-medium",
-    },
-    "pt_BR-edresson-low": {
-        "name": "Edresson",
-        "lang": "pt-BR",
-        "gender": "Masculina",
-        "url_base": "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/pt/pt_BR/edresson/low/pt_BR-edresson-low",
-    },
-}
+# AVAILABLE_VOICES has been replaced by VoiceManager
 
 MODE_MODEL_MAP = {
     "fast": "qwen2.5:0.5b",
@@ -174,11 +166,12 @@ class ClientSession:
         self.state_machine = ConversationStateMachine()
         self.config = {
             "llm_model": "gemma3:4b",
-            "tts_voice": "pt_BR-faber-medium",
             "stt_model": "base",
             "mode": "premium",
             "voice_enabled": True,
+            "persona_id": "atlas"
         }
+        self.config_lock = asyncio.Lock()
         # Registra listener para este cliente específico
         self.state_machine.add_listener(self._on_state_event)
 
@@ -255,7 +248,7 @@ async def get_models():
     return {
         "llm": list(MODE_MODEL_MAP.values()),
         "modes": list(MODE_MODEL_MAP.keys()),
-        "tts_voices": {k: v for k, v in AVAILABLE_VOICES.items()},
+        "voice_profiles": {v["id"]: v for v in voice_manager.list_voices()},
     }
 
 
@@ -292,7 +285,8 @@ async def websocket_endpoint(ws: WebSocket):
         "data": {
             "state": session.state_machine.state.value,
             "config": session.config,
-            "voices": {k: v for k, v in AVAILABLE_VOICES.items()},
+            "voice_profiles": {v["id"]: v for v in voice_manager.list_voices()},
+            "personas": persona_manager.list_personas(),
         },
         "timestamp": time.time(),
     })
@@ -303,36 +297,54 @@ async def websocket_endpoint(ws: WebSocket):
             action = msg.get("action")
 
             if action == "start_listening":
-                if session.state_machine.transition_to(ConversationState.LISTENING):
+                cycle_id = session.state_machine.start_new_cycle()
+                if session.state_machine.transition_to(ConversationState.LISTENING, cycle_id=cycle_id):
                     await ws.send_json({"event": "ack", "data": {"action": "start_listening"}, "timestamp": time.time()})
 
             elif action == "audio_data":
                 audio_b64 = msg.get("audio")
+                cycle_id = session.state_machine.active_cycle_id
                 if audio_b64 and session.state_machine.state == ConversationState.LISTENING:
-                    session.state_machine.transition_to(ConversationState.TRANSCRIBING)
-                    threading.Thread(target=process_voice_pipeline, args=(audio_b64, client_id), daemon=True).start()
+                    session.state_machine.transition_to(ConversationState.TRANSCRIBING, cycle_id=cycle_id)
+                    threading.Thread(target=process_voice_pipeline, args=(audio_b64, client_id, cycle_id), daemon=True).start()
 
             elif action == "text_message":
                 text = msg.get("text", "").strip()
                 if text and session.state_machine.state == ConversationState.IDLE:
-                    session.state_machine.transition_to(ConversationState.LISTENING)
-                    session.state_machine.transition_to(ConversationState.TRANSCRIBING)
-                    session.state_machine.emit_event("transcription_complete", {"text": text, "language": "text", "stt_time": 0})
-                    threading.Thread(target=process_text_pipeline, args=(text, client_id), daemon=True).start()
+                    cycle_id = session.state_machine.start_new_cycle()
+                    session.state_machine.transition_to(ConversationState.LISTENING, cycle_id=cycle_id)
+                    session.state_machine.transition_to(ConversationState.TRANSCRIBING, cycle_id=cycle_id)
+                    session.state_machine.emit_event("transcription_complete", {"text": text, "language": "text", "stt_time": 0}, cycle_id=cycle_id)
+                    threading.Thread(target=process_text_pipeline, args=(text, client_id, cycle_id), daemon=True).start()
 
             elif action == "config":
-                if "mode" in msg:
-                    session.config["mode"] = msg["mode"]
-                    session.config["llm_model"] = MODE_MODEL_MAP.get(msg["mode"], session.config["llm_model"])
-                if "tts_voice" in msg:
-                    session.config["tts_voice"] = msg["tts_voice"]
-                if "voice_enabled" in msg:
-                    session.config["voice_enabled"] = bool(msg["voice_enabled"])
+                async with session.config_lock:
+                    if "mode" in msg:
+                        session.config["mode"] = msg["mode"]
+                        session.config["llm_model"] = MODE_MODEL_MAP.get(msg["mode"], session.config["llm_model"])
+                    if "voice_enabled" in msg:
+                        session.config["voice_enabled"] = bool(msg["voice_enabled"])
+
+            elif action == "set_persona":
+                persona_id = msg.get("persona_id")
+                if persona_id:
+                    persona = persona_manager.get_persona(persona_id)
+                    if persona:
+                        async with session.config_lock:
+                            session.config["persona_id"] = persona["id"]
+                        
+                        await ws.send_json({
+                            "event": "persona_changed",
+                            "data": {"persona_id": persona["id"], "greeting": persona.get("greeting", "")},
+                            "timestamp": time.time()
+                        })
 
             elif action == "cancel":
+                session.state_machine.start_new_cycle()
                 session.state_machine.reset()
                 
             elif action == "clear_chat":
+                session.state_machine.start_new_cycle()
                 session.state_machine.reset()
                 await ws.send_json({"event": "chat_cleared", "timestamp": time.time()})
 
@@ -346,7 +358,7 @@ async def websocket_endpoint(ws: WebSocket):
 
 
 # ─── Pipeline: Text Input (skip STT) ─────────────────────────
-def process_text_pipeline(user_text: str, client_id: str):
+def process_text_pipeline(user_text: str, client_id: str, cycle_id: str = None):
     """Pipeline para input de texto — skip STT, vai direto ao LLM."""
     session_obj = manager.get_session(client_id)
     if not session_obj: return
@@ -355,17 +367,17 @@ def process_text_pipeline(user_text: str, client_id: str):
     
     # Se já houver alguém na fila, avisamos o usuário
     if request_queue.qsize() > 0:
-        session_obj.state_machine.transition_to(ConversationState.QUEUED, {"queue_pos": request_queue.qsize()})
+        session_obj.state_machine.transition_to(ConversationState.QUEUED, {"queue_pos": request_queue.qsize()}, cycle_id=cycle_id)
 
     # Adiciona à fila de inferência
     asyncio.run_coroutine_threadsafe(
-        request_queue.put((_run_llm_tts_pipeline, (session_data, user_text, 0, None), {"client_id": client_id})),
+        request_queue.put((_run_llm_tts_pipeline, (session_data, user_text, 0, None), {"client_id": client_id, "cycle_id": cycle_id})),
         lifespan._loop
     )
 
 
 # ─── Pipeline: Voice Input ────────────────────────────────────
-def process_voice_pipeline(audio_b64: str, client_id: str):
+def process_voice_pipeline(audio_b64: str, client_id: str, cycle_id: str = None):
     """Pipeline completo: Audio → STT → LLM → TTS."""
     import base64
     import subprocess
@@ -387,7 +399,7 @@ def process_voice_pipeline(audio_b64: str, client_id: str):
             capture_output=True, timeout=15,
         )
         if result.returncode != 0:
-            session_obj.state_machine.emit_event("error", {"message": f"Falha na conversão de audio: {result.stderr.decode()[:200]}"})
+            session_obj.state_machine.emit_event("error", {"message": f"Falha na conversão de audio: {result.stderr.decode()[:200]}"}, cycle_id=cycle_id)
             session_obj.state_machine.reset()
             return
 
@@ -401,7 +413,7 @@ def process_voice_pipeline(audio_b64: str, client_id: str):
         transcribed_text, stt_time, stt_info = stt.transcribe(input_path)
 
         if not transcribed_text.strip():
-            session_obj.state_machine.emit_event("error", {"message": "Nenhum texto detectado no audio."})
+            session_obj.state_machine.emit_event("error", {"message": "Nenhum texto detectado no audio."}, cycle_id=cycle_id)
             session_obj.state_machine.reset()
             return
 
@@ -409,15 +421,15 @@ def process_voice_pipeline(audio_b64: str, client_id: str):
             "text": transcribed_text,
             "language": getattr(stt_info, "language", "unknown"),
             "stt_time": round(stt_time, 3),
-        })
+        }, cycle_id=cycle_id)
 
         # Se já houver alguém na fila, avisamos o usuário
         if request_queue.qsize() > 0:
-            session_obj.state_machine.transition_to(ConversationState.QUEUED, {"queue_pos": request_queue.qsize()})
+            session_obj.state_machine.transition_to(ConversationState.QUEUED, {"queue_pos": request_queue.qsize()}, cycle_id=cycle_id)
 
         # Adiciona à fila de inferência
         asyncio.run_coroutine_threadsafe(
-            request_queue.put((_run_llm_tts_pipeline, (session_data, transcribed_text, stt_time, stt_info), {"client_id": client_id})),
+            request_queue.put((_run_llm_tts_pipeline, (session_data, transcribed_text, stt_time, stt_info), {"client_id": client_id, "cycle_id": cycle_id})),
             lifespan._loop
         )
 
@@ -430,13 +442,27 @@ def process_voice_pipeline(audio_b64: str, client_id: str):
 def _run_llm_tts_pipeline(session_data, user_text: str, stt_time: float, stt_info, **kwargs):
     """Core pipeline compartilhado entre voice e text input."""
     client_id = kwargs.get("client_id")
+    cycle_id = kwargs.get("cycle_id")
     session_obj = manager.get_session(client_id)
     if not session_obj: return
 
-    session_obj.state_machine.transition_to(ConversationState.THINKING)
+    if session_obj.state_machine.active_cycle_id != cycle_id:
+        print(f"[TASK_ABORTED] _run_llm_tts_pipeline abortado no inicio. Cycle {cycle_id} obsoleto.")
+        return
+
+    session_obj.state_machine.transition_to(ConversationState.THINKING, cycle_id=cycle_id)
 
     llm = get_llm(session_obj.config["llm_model"])
-    tts = get_tts(session_obj.config["tts_voice"])
+    
+    persona_id = session_obj.config.get("persona_id", "atlas")
+    persona_data = persona_manager.get_persona(persona_id)
+    
+    voice_profile_id = persona_data.get("voice_profile_id", "technical_male_calm")
+    voice_profile = voice_manager.get_voice(voice_profile_id)
+    piper_model = voice_profile.get("model", "pt_BR-faber-medium") if voice_profile else "pt_BR-faber-medium"
+    voice_traits = voice_profile.get("voice_traits", {}) if voice_profile else {}
+    
+    tts = get_tts(piper_model)
 
     full_response = ""
     ttft = None
@@ -453,17 +479,25 @@ def _run_llm_tts_pipeline(session_data, user_text: str, stt_time: float, stt_inf
     # Regex: match text ending with sentence terminators
     _sentence_end = re.compile(r'[.!?]\s*$')
 
-    print(f"[LLM] Streaming com system prompt otimizado para voz...")
-    for token in llm.generate_stream(user_text, system_prompt=SYSTEM_PROMPT):
+    persona_id = session_obj.config.get("persona_id", "atlas")
+    persona_data = persona_manager.get_persona(persona_id)
+    final_system_prompt = PromptBuilder.build_system_prompt(persona_data, base_prompt=SYSTEM_PROMPT)
+
+    print(f"[LLM] Streaming com system prompt da persona {persona_id}...")
+    for token in llm.generate_stream(user_text, system_prompt=final_system_prompt):
+        if session_obj.state_machine.active_cycle_id != cycle_id:
+            print(f"[TASK_ABORTED] Stream interrompido. Cycle {cycle_id} obsoleto.")
+            return
+
         if ttft is None:
             ttft = time.time() - llm_start
-            session_obj.state_machine.emit_event("metrics_updated", {"ttft": round(ttft, 3)})
+            session_obj.state_machine.emit_event("metrics_updated", {"ttft": round(ttft, 3)}, cycle_id=cycle_id)
 
         full_response += token
         raw_buffer += token
 
         # Emit partial text (original, com markdown se houver)
-        session_obj.state_machine.emit_event("llm_chunk", {"token": token, "full_text": full_response})
+        session_obj.state_machine.emit_event("llm_chunk", {"token": token, "full_text": full_response}, cycle_id=cycle_id)
 
         # Detect sentence boundary in buffer
         if _sentence_end.search(raw_buffer) and len(raw_buffer.strip()) >= MIN_CHUNK_CHARS:
@@ -473,24 +507,24 @@ def _run_llm_tts_pipeline(session_data, user_text: str, stt_time: float, stt_inf
 
             if clean_chunk and session_obj.config["voice_enabled"]:
                 if not session_obj.state_machine.state == ConversationState.SPEAKING:
-                    session_obj.state_machine.transition_to(ConversationState.SPEAKING)
+                    session_obj.state_machine.transition_to(ConversationState.SPEAKING, cycle_id=cycle_id)
 
                 chunk_count += 1
                 chunk_path = os.path.join(tts_dir, f"chunk_{chunk_count:03d}.wav")
                 tts_start = time.time()
-                tts.generate_audio(clean_chunk, chunk_path)
+                tts.generate_audio(clean_chunk, chunk_path, voice_traits=voice_traits)
                 tts_gen_time = time.time() - tts_start
 
                 if ttfs is None:
                     ttfs = time.time() - llm_start
-                    session_obj.state_machine.emit_event("metrics_updated", {"ttfs": round(ttfs, 3)})
+                    session_obj.state_machine.emit_event("metrics_updated", {"ttfs": round(ttfs, 3)}, cycle_id=cycle_id)
 
                 session_obj.state_machine.emit_event("tts_chunk_ready", {
                     "chunk_id": chunk_count, 
                     "text": clean_chunk, 
                     "gen_time": round(tts_gen_time, 3),
                     "audio_url": f"/sessions/{session_data.timestamp}/tts/chunks/chunk_{chunk_count:03d}.wav"
-                })
+                }, cycle_id=cycle_id)
                 # REMOVED: tts.play_audio(chunk_path)
                 # state_machine.emit_event("playback_finished", {"chunk_id": chunk_count})
 
@@ -500,17 +534,17 @@ def _run_llm_tts_pipeline(session_data, user_text: str, stt_time: float, stt_inf
     remaining = sanitize_for_tts(raw_buffer).strip()
     if remaining and session_obj.config["voice_enabled"]:
         if not session_obj.state_machine.state == ConversationState.SPEAKING:
-            session_obj.state_machine.transition_to(ConversationState.SPEAKING)
+            session_obj.state_machine.transition_to(ConversationState.SPEAKING, cycle_id=cycle_id)
         chunk_count += 1
         chunk_path = os.path.join(tts_dir, f"chunk_{chunk_count:03d}.wav")
-        tts.generate_audio(remaining, chunk_path)
+        tts.generate_audio(remaining, chunk_path, voice_traits=voice_traits)
         
         session_obj.state_machine.emit_event("tts_chunk_ready", {
             "chunk_id": chunk_count, 
             "text": remaining, 
             "gen_time": 0,
             "audio_url": f"/sessions/{session_data.timestamp}/tts/chunks/chunk_{chunk_count:03d}.wav"
-        })
+        }, cycle_id=cycle_id)
         # REMOVED: tts.play_audio(chunk_path)
         chunks_meta.append({"id": chunk_count, "text": remaining, "path": chunk_path, "gen_time": 0})
 
@@ -522,7 +556,7 @@ def _run_llm_tts_pipeline(session_data, user_text: str, stt_time: float, stt_inf
 
     # If voice was disabled, still transition through states
     if not session_obj.config["voice_enabled"] and session_obj.state_machine.state == ConversationState.THINKING:
-        session_obj.state_machine.transition_to(ConversationState.IDLE)
+        session_obj.state_machine.transition_to(ConversationState.IDLE, cycle_id=cycle_id)
 
     # Persist
     session_data.save_text("stt_transcription", user_text)
@@ -535,7 +569,7 @@ def _run_llm_tts_pipeline(session_data, user_text: str, stt_time: float, stt_inf
     session_data.build_metadata(
         stt_model=session_obj.config["stt_model"],
         llm_model=session_obj.config["llm_model"],
-        tts_model=session_obj.config["tts_voice"],
+        tts_model=piper_model,
         stt_time=stt_time,
         llm_time=total_llm_time,
         tts_time=0,
@@ -559,28 +593,76 @@ def _run_llm_tts_pipeline(session_data, user_text: str, stt_time: float, stt_inf
         "chunks_count": chunk_count,
         "model": session_obj.config["llm_model"],
         "voice_enabled": session_obj.config["voice_enabled"],
-    })
+    }, cycle_id=cycle_id)
 
 
 # ─── Main ─────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
-    
+    import socket
+
+    def get_local_ip():
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        try:
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+
+        except Exception:
+            ip = "127.0.0.1"
+
+        finally:
+            s.close()
+
+        return ip
+
+    local_ip = get_local_ip()
+
     # Configuração TLS (M8)
-    cert_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "models", "certs", "cert.pem")
-    key_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "models", "certs", "key.pem")
-    
+    cert_path = os.path.join(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.dirname(os.path.abspath(__file__))
+            )
+        ),
+        "models",
+        "certs",
+        "cert.pem"
+    )
+
+    key_path = os.path.join(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.dirname(os.path.abspath(__file__))
+            )
+        ),
+        "models",
+        "certs",
+        "key.pem"
+    )
+
     ssl_config = {}
+
     if os.path.exists(cert_path) and os.path.exists(key_path):
-        print(f"\n[VoiceLab] ✅ HTTPS ATIVO: https://192.168.68.110:8000")
-        print(f"[VoiceLab] ✅ Acesso LAN: https://192.168.68.110:8000")
+
+        print(f"\n[VoiceLab] ✅ HTTPS ATIVO: https://{local_ip}:8000")
+        print(f"[VoiceLab] ✅ Acesso LAN: https://{local_ip}:8000")
         print("[VoiceLab] 💡 IMPORTANTE: No celular, aceite o 'Aviso de Segurança' para habilitar o microfone.\n")
+
         ssl_config = {
             "ssl_certfile": cert_path,
             "ssl_keyfile": key_path
         }
+
     else:
-        print("[VoiceLab] ⚠️ TLS NÃO detectado. Iniciando em http://0.0.0.0:8000")
+
+        print(f"[VoiceLab] ⚠️ TLS NÃO detectado. Iniciando em http://{local_ip}:8000")
         print("[VoiceLab] ⚠️ AVISO: Microfone mobile pode não funcionar sem HTTPS.")
 
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", **ssl_config)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=8000,
+        log_level="info",
+        **ssl_config
+    )

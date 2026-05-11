@@ -5,6 +5,7 @@ import time
 import soundfile as sf
 import sounddevice as sd
 from piper.voice import PiperVoice
+from piper.config import SynthesisConfig
 
 class PiperTTSEngine:
     def __init__(self, model_name="pt_BR-faber-medium", model_dir="models/tts/piper"):
@@ -60,7 +61,7 @@ class PiperTTSEngine:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
 
-    def generate_audio(self, text, output_path):
+    def generate_audio(self, text, output_path, voice_traits=None):
         """Gera o arquivo de audio WAV a partir do texto."""
         start_time = time.time()
         
@@ -68,10 +69,16 @@ class PiperTTSEngine:
         
         print(f"[TTSEngine] Gerando audio para: \"{text[:60]}...\"" if len(text) > 60 else f"[TTSEngine] Gerando audio para: \"{text}\"")
         
+        syn_config = SynthesisConfig()
+        if voice_traits:
+            speaking_rate = voice_traits.get("speaking_rate", 1.0)
+            if speaking_rate > 0:
+                syn_config.length_scale = 1.0 / speaking_rate
+        
         with wave.open(output_path, 'wb') as wf:
             # synthesize_wav() configura automaticamente os headers WAV
             # (channels, sample_rate, sample_width) a partir do modelo
-            self.voice.synthesize_wav(text, wf)
+            self.voice.synthesize_wav(text, wf, syn_config=syn_config)
             
         elapsed_time = time.time() - start_time
         
